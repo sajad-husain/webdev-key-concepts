@@ -1,7 +1,8 @@
+import { useState } from "react"
 import Notes from "./components/Notes"
 
 function App({ notes }) {
-
+  const [note, setNote] = useState(notes)
   return (
     <>
       <h1>Notes</h1>
