@@ -3,11 +3,16 @@ import Notes from "./components/Notes"
 
 function App({ notes }) {
   const [note, setNote] = useState(notes)
+  const [newNote, setNewNote] = useState('new note...')
 
   const formHandler = (event) => {
     event.preventDefault()
-    console.log("form data ", event.target);
+    console.log("form data ", event.target.value);
+  }
 
+  const noteChangeHandler = (event) => {
+    console.log(event.target.value);
+    setNewNote(event.target.value)
 
   }
   return (
@@ -17,8 +22,8 @@ function App({ notes }) {
         {note.map(notelist => <Notes key={notelist.id} note={notelist} />)}
       </ul>
       <form action="" onSubmit={formHandler}>
-        <input />
-        <button type="submite">Submit</button>
+        <input onChange={noteChangeHandler} value={newNote} />
+        <button type="submite">Save</button>
       </form>
     </>
   )
