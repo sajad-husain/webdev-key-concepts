@@ -7,7 +7,7 @@ function App({ notes }) {
     <>
       <h1>Notes</h1>
       <ul>
-        {notes.map(note => <Notes key={note.id} note={note} />)}
+        {note.map(notelist => <Notes key={notelist.id} note={notelist} />)}
       </ul>
     </>
   )
