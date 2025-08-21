@@ -8,8 +8,11 @@ function App({ notes }) {
 
   console.log(note);
 
-  const notesToShow = showAll ? note : note.filter(filter => filter.important === true)
-  const formHandler = (event) => {
+  const notesToShow = showAll ?
+    note :
+    note.filter(n => n.important === true)
+
+  const formHandler = (event) => { //form submission handler
     event.preventDefault()
     console.log("form data ", event.target);
     const newObj = {
@@ -19,7 +22,7 @@ function App({ notes }) {
     }
     console.log("Object ID", newObj.id);
 
-    const createNote = note.concat(newObj)
+    const createNote = note.concat(newObj) // input onchange handler
     setNote(createNote)
     setNewNote('')
   }
