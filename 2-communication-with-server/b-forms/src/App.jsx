@@ -4,6 +4,7 @@ import Notes from "./components/Notes"
 function App({ notes }) {
   const [note, setNote] = useState(notes)
   const [newNote, setNewNote] = useState('new note...')
+  const [setshowAll, setSetshowAll] = useState(true)
 
   console.log(note);
 
