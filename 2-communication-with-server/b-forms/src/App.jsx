@@ -17,7 +17,8 @@ function App({ notes }) {
     }
     console.log("Object ID", newObj.id);
 
-    setNote(note.concat(newObj))
+    const createNote = note.concat(newObj)
+    setNote(createNote)
     setNewNote('')
   }
 
