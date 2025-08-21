@@ -4,10 +4,11 @@ import Notes from "./components/Notes"
 function App({ notes }) {
   const [note, setNote] = useState(notes)
   const [newNote, setNewNote] = useState('new note...')
-  const [setshowAll, setSetshowAll] = useState(true)
+  const [showAll, setSetshowAll] = useState(true)
 
   console.log(note);
 
+  const notesToShow = showAll ? note : note.filter(filter => filter.important === true)
   const formHandler = (event) => {
     event.preventDefault()
     console.log("form data ", event.target);
@@ -32,7 +33,7 @@ function App({ notes }) {
     <>
       <h1>Notes</h1>
       <ul>
-        {note.map(notelist => <Notes key={notelist.id} note={notelist} />)}
+        {notesToShow.map(notelist => <Notes key={notelist.id} note={notelist} />)}
       </ul>
       <form action="" onSubmit={formHandler}>
         <input onChange={noteChangeHandler} value={newNote} />
