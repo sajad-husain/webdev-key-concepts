@@ -5,9 +5,20 @@ function App({ notes }) {
   const [note, setNote] = useState(notes)
   const [newNote, setNewNote] = useState('new note...')
 
+  console.log(note);
+
   const formHandler = (event) => {
     event.preventDefault()
-    console.log("form data ", event.target.value);
+    console.log("form data ", event.target);
+    const newObj = {
+      content: newNote,
+      important: Math.random() < 0.5,
+      id: String(note.length + 1)
+    }
+    console.log("Object ID", newObj.id);
+
+    setNote(note.concat(newObj))
+    setNewNote('')
   }
 
   const noteChangeHandler = (event) => {
