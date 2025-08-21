@@ -35,12 +35,13 @@ function App({ notes }) {
   return (
     <>
       <h1>Notes</h1>
+      <button onClick={() => setSetshowAll(!showAll)} >show {showAll ? 'important' : 'all'}</button>
       <ul>
         {notesToShow.map(notelist => <Notes key={notelist.id} note={notelist} />)}
       </ul>
       <form action="" onSubmit={formHandler}>
         <input onChange={noteChangeHandler} value={newNote} />
-        <button type="submite">Save</button>
+        <button type="submite" >submit</button>
       </form>
     </>
   )
