@@ -3,12 +3,22 @@ import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import axios from 'axios'
 
-const promise = axios.get('http://localhost:3001/notes')
-console.log(promise);
-promise.then(res => console.log(res))
+// const promise = axios
+//   .get('http://localhost:3001/notes')
+//   .then(res => {
+//     const notes = res.data
+//     console.log("value form promise 1 actual promise", notes);
+//     ReactDOM.createRoot(document.getElementById('root')).render(
+//       <App notes={notes} />
+//     )
 
-const promise2 = axios.get('http://localhost:3001/foobar')
-console.log(promise2);
+//   }
+//   )
+// console.log(promise);
+// promise.then("promise.then", res => console.log(res))
+
+// const promise2 = axios.get('http://localhost:3001/foobar')
+// console.log("promise 2 value", promise2);
 
 const notes = [
   {
