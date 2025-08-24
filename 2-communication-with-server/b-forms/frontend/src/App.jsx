@@ -23,7 +23,18 @@ function App() {
   console.log('render', note.length, 'notes');
 
   const addNote = (event) => {
+    event.preventDefault()
+    const newObj = {
+      content: newNote,
+      import: Math.random() < 0.5,
+      id: String(note.length + 1)
+    }
 
+    axios
+      .post('http://localhost:3001/notes', newObj)
+      .then(response => {
+        const notes = response.data
+      })
   }
 
 
