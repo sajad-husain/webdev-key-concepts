@@ -33,7 +33,8 @@ function App() {
     axios
       .post('http://localhost:3001/notes', newObj)
       .then(response => {
-        const notes = response.data
+        setNote(note.concat(response.data))
+        setNewNote('')
       })
   }
 
