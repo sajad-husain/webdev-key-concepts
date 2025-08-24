@@ -22,6 +22,10 @@ function App() {
   }, [])
   console.log('render', note.length, 'notes');
 
+  const addNote = (event) => {
+
+  }
+
 
   const notesToShow = showAll ?
     note :
