@@ -38,6 +38,10 @@ function App() {
       })
   }
 
+  const togglingNotes = () => {
+
+  }
+
 
   const notesToShow = showAll ?
     note :
