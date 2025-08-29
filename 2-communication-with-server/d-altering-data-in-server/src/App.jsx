@@ -30,6 +30,19 @@ const App = () => {
       }
       )
   }
+  console.log('notes data', notes);
+
+  const toggleImportance = (id) => {
+    console.log(`importance of id ${id} need to be toggled`);
+    const url = `http://localhost:3001/notes/${id}`;
+    const toggler = notes.find(n => n.id === id)
+    const changeNote = { ...toggler, important: !toggler.important }
+    axios.put(url, changeNote)
+      .then(response => {
+        setNotes(notes.map(note => note.id === id ? response.data : note))
+      })
+
+  }
 
   //filter to render important notes
   const noteToShow = notes.filter(i => i.important === true)
@@ -46,8 +59,8 @@ const App = () => {
       </form>
 
       {
-        showNotes ? notes.map((item, index) => <Notes key={index} notes={item.content} />)
-          : noteToShow.map((item, index) => <Notes key={index} notes={item.content} />)
+        showNotes ? notes.map((item, index) => <Notes key={index} notes={item.content} toggleImportance={() => toggleImportance(item.id)} />)
+          : noteToShow.map((item, index) => <Notes key={index} notes={item.content} toggleImportance={() => toggleImportance(item.id)} />)
       }
     </div>
   )

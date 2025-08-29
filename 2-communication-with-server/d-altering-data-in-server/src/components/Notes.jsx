@@ -1,10 +1,11 @@
 import React from 'react'
 
-const Notes = ({ notes }) => {
-
+const Notes = ({ notes, toggleImportance }) => {
+    const label = notes.important ? 'Make note important' : 'make important'
     return (
         <div>
-            <p>{notes}</p>
+            {notes}
+            <button onClick={toggleImportance}>{label}</button>
         </div>
     )
 }
