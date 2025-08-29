@@ -20,17 +20,14 @@ const App = () => {
     e.preventDefault()
     const newObj = {
       content: newNote,
-      important: Math.random() < 0.5
+      important: Math.random() < 0.5,
     }
     axios.post('http://localhost:3001/notes', newObj)
       .then(response => {
         setNotes(notes.concat(response.data))
-        console.log('notes elements', notes);
-
       }
       )
   }
-  console.log('notes data', notes);
 
   const toggleImportance = (id) => {
     console.log(`importance of id ${id} need to be toggled`);
@@ -59,8 +56,8 @@ const App = () => {
       </form>
 
       {
-        showNotes ? notes.map((item, index) => <Notes key={index} notes={item.content} toggleImportance={() => toggleImportance(item.id)} />)
-          : noteToShow.map((item, index) => <Notes key={index} notes={item.content} toggleImportance={() => toggleImportance(item.id)} />)
+        showNotes ? notes.map((item) => <Notes key={item.id} notes={item.content} toggleImportance={() => toggleImportance(item.id)} />)
+          : noteToShow.map((item) => <Notes key={item.id} notes={item.content} toggleImportance={() => toggleImportance(item.id)} />)
       }
     </div>
   )
