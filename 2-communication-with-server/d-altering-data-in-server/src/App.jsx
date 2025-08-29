@@ -7,6 +7,7 @@ const App = () => {
   const [newNote, setNewNote] = useState('')
   const [showNotes, setshowNotes] = useState(true)
 
+  // get request to fetch data from json server
   useEffect(() => {
     axios.get('http://localhost:3001/notes')
       .then(response => {
@@ -14,6 +15,7 @@ const App = () => {
       })
   }, [])
 
+  // post request to add more data to my json server
   const formHandler = (e) => {
     e.preventDefault()
     const newObj = {
@@ -29,6 +31,7 @@ const App = () => {
       )
   }
 
+  //filter to render important notes
   const noteToShow = notes.filter(i => i.important === true)
 
   return (
