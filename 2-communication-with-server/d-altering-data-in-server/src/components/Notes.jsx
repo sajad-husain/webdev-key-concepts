@@ -1,9 +1,10 @@
 import React from 'react'
 
-const Notes = ({ content }) => {
+const Notes = ({ notes }) => {
+
     return (
         <div>
-            <p>{content}</p>
+            <p>{notes}</p>
         </div>
     )
 }

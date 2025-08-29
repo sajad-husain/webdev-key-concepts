@@ -5,6 +5,7 @@ import axios from 'axios'
 const App = () => {
   const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState('')
+  const [showNotes, setshowNotes] = useState(true)
 
   useEffect(() => {
     axios.get('http://localhost:3001/notes')
@@ -17,7 +18,7 @@ const App = () => {
     e.preventDefault()
     const newObj = {
       content: newNote,
-      important: Math.random() < 0.5,
+      important: Math.random() < 0.5
     }
     axios.post('http://localhost:3001/notes', newObj)
       .then(response => {
@@ -28,18 +29,23 @@ const App = () => {
       )
   }
 
+  const noteToShow = notes.filter(i => i.important === true)
+
   return (
     <div>
       <h1>Notes</h1>
+      <div>
+        <button onClick={() => setshowNotes(!showNotes)}>show {showNotes ? 'important' : 'all'}</button>
+      </div>
       <form onSubmit={formHandler}>
         <input onChange={(e) => setNewNote(e.target.value)} value={newNote} type="text" />
         <button type='submit'>add</button>
       </form>
 
       {
-        notes.map((item, index) => <Notes key={index} content={item.content} />)
+        showNotes ? notes.map((item, index) => <Notes key={index} notes={item.content} />)
+          : noteToShow.map((item, index) => <Notes key={index} notes={item.content} />)
       }
-
     </div>
   )
 }
