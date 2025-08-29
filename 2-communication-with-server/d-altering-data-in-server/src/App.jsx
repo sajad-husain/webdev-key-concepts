@@ -4,7 +4,7 @@ import axios from 'axios'
 
 const App = () => {
   const [notes, setNotes] = useState([])
-  const [newNote, setNewNote] = useState([])
+  const [newNote, setNewNote] = useState('')
 
   useEffect(() => {
     axios.get('http://localhost:3001/notes')
@@ -13,8 +13,19 @@ const App = () => {
       })
   }, [])
 
-  const formHandler = () => {
+  const formHandler = (e) => {
+    e.preventDefault()
+    const newObj = {
+      content: newNote,
+      important: Math.random() < 0.5,
+    }
+    axios.post('http://localhost:3001/notes', newObj)
+      .then(response => {
+        setNotes(notes.concat(response.data))
+        console.log('notes elements', notes);
 
+      }
+      )
   }
 
   return (
@@ -26,7 +37,7 @@ const App = () => {
       </form>
 
       {
-        notes.map(item => <Notes key={item.id} content={item.content} />)
+        notes.map((item, index) => <Notes key={index} content={item.content} />)
       }
 
     </div>
