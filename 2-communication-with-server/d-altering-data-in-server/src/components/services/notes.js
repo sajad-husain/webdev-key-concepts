@@ -2,15 +2,20 @@ import axios from "axios";
 
 const url = 'http://localhost:3001/notes'
 
-export const getAll = () => {
+const getAll = () => {
     return axios.get(url)
 }
 
-export const create = (newObj) => {
+const create = (newObj) => {
     return axios.post(url, newObj)
 }
 
-export const update = (id, newObj) => {
+const update = (id, newObj) => {
     return axios.put(`${url}/${id}`, newObj)
 }
 
+export default {
+    getAll: getAll,
+    create: create,
+    update: update
+}
