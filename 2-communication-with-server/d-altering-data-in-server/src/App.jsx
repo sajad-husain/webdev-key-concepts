@@ -52,8 +52,13 @@ const App = () => {
 
   }
 
+  const deleteNote = (id) => {
+
+  }
+
   //filter to render important notes
   const noteToShow = notes.filter(i => i.important === true)
+
 
   return (
     <div>
@@ -67,8 +72,8 @@ const App = () => {
       </form>
 
       {
-        showNotes ? notes.map((item) => <Notes key={item.id} notes={item.content} toggleImportance={() => toggleImportance(item.id)} />)
-          : noteToShow.map((item) => <Notes key={item.id} notes={item.content} toggleImportance={() => toggleImportance(item.id)} />)
+        showNotes ? notes.map((item) => <Notes key={item.id} notes={item.content} toggleImportance={() => toggleImportance(item.id)} deleteNote={deleteNote} />)
+          : noteToShow.map((item) => <Notes key={item.id} notes={item.content} toggleImportance={() => toggleImportance(item.id)} deleteNote={deleteNote} />)
       }
     </div>
   )
