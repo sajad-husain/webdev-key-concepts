@@ -3,14 +3,17 @@ import axios from "axios";
 const url = 'http://localhost:3001/notes'
 
 const getAll = () => {
-    return axios.get(url)
+    const request = axios.get(url)
+    return request.then(response => response.data)
 }
 
 const create = (newObj) => {
-    return axios.post(url, newObj)
+    const request = axios.post(url, newObj)
+    return request.then(response => response.data)
 }
 
 const update = (id, newObj) => {
+    const request = axios.put(`${url}/${id}`, newObj)
     return axios.put(`${url}/${id}`, newObj)
 }
 
