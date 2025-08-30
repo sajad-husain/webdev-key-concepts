@@ -14,7 +14,7 @@ const create = (newObj) => {
 
 const update = (id, newObj) => {
     const request = axios.put(`${url}/${id}`, newObj)
-    return axios.put(`${url}/${id}`, newObj)
+    return request.then(resonse => resonse.data)
 }
 
 export default { getAll, create, update }

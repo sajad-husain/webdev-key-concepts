@@ -12,8 +12,8 @@ const App = () => {
   useEffect(() => {
     noteService
       .getAll()
-      .then(response => {
-        setNotes(response.data)
+      .then(initialNotes => {
+        setNotes(initialNotes)
       })
   }, [])
 
@@ -25,10 +25,11 @@ const App = () => {
       important: Math.random() < 0.5,
     }
 
+
     noteService
       .create(newObj)
-      .then(response => {
-        setNotes(notes.concat(response.data))
+      .then(returnNote => {
+        setNotes(notes.concat(returnNote))
       }
       )
   }
@@ -38,10 +39,11 @@ const App = () => {
     const toggler = notes.find(n => n.id === id)
     const changeNote = { ...toggler, important: !toggler.important }
 
+
     noteService
-      .create(id, changeNote)
-      .then(response => {
-        setNotes(notes.map(note => note.id === id ? response.data : note))
+      .update(id, changeNote)
+      .then(returnNote => {
+        setNotes(notes.map(note => note.id === id ? returnNote : note))
       })
 
   }
