@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Notes from './components/Notes'
 import axios from 'axios'
+import { noteService } from './components/services/notes'
 
 const App = () => {
   const [notes, setNotes] = useState([])
@@ -9,7 +10,8 @@ const App = () => {
 
   // get request to fetch data from json server
   useEffect(() => {
-    axios.get('http://localhost:3001/notes')
+    noteService
+      .getAll()
       .then(response => {
         setNotes(response.data)
       })
@@ -22,7 +24,9 @@ const App = () => {
       content: newNote,
       important: Math.random() < 0.5,
     }
-    axios.post('http://localhost:3001/notes', newObj)
+
+    noteService
+      .create(newObj)
       .then(response => {
         setNotes(notes.concat(response.data))
       }
@@ -31,10 +35,11 @@ const App = () => {
 
   const toggleImportance = (id) => {
     console.log(`importance of id ${id} need to be toggled`);
-    const url = `http://localhost:3001/notes/${id}`;
     const toggler = notes.find(n => n.id === id)
     const changeNote = { ...toggler, important: !toggler.important }
-    axios.put(url, changeNote)
+
+    noteService
+      .create(id, changeNote)
       .then(response => {
         setNotes(notes.map(note => note.id === id ? response.data : note))
       })
