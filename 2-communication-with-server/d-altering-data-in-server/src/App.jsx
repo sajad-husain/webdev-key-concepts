@@ -30,6 +30,7 @@ const App = () => {
       .create(newObj)
       .then(returnNote => {
         setNotes(notes.concat(returnNote))
+        setNewNote('')
       }
       )
   }
@@ -54,6 +55,15 @@ const App = () => {
 
   const deleteNote = (id) => {
 
+    noteService
+      .deleteRequest(id)
+      .then(response => {
+        setNotes(notes.filter(n => n.id !== id))
+      })
+      .catch(error => {
+        alert(`data don't exist in ${id} id`)
+      })
+
   }
 
   //filter to render important notes
@@ -72,8 +82,8 @@ const App = () => {
       </form>
 
       {
-        showNotes ? notes.map((item) => <Notes key={item.id} notes={item.content} toggleImportance={() => toggleImportance(item.id)} deleteNote={deleteNote} />)
-          : noteToShow.map((item) => <Notes key={item.id} notes={item.content} toggleImportance={() => toggleImportance(item.id)} deleteNote={deleteNote} />)
+        showNotes ? notes.map((item) => <Notes key={item.id} notes={item.content} toggleImportance={() => toggleImportance(item.id)} deleteNote={() => deleteNote(item.id)} />)
+          : noteToShow.map((item) => <Notes key={item.id} notes={item.content} toggleImportance={() => toggleImportance(item.id)} deleteNote={() => deleteNote(item.id)} />)
       }
     </div>
   )
