@@ -3,6 +3,7 @@ import Notes from './components/Notes'
 import noteService from './components/services/notes'
 import './index.css'
 import Notifications from './components/Notifications'
+import Footer from './components/Footer'
 
 const App = () => {
   const [notes, setNotes] = useState([])
@@ -91,6 +92,7 @@ const App = () => {
         showNotes ? notes.map((item) => <Notes key={item.id} notes={item.content} toggleImportance={() => toggleImportance(item.id)} deleteNote={() => deleteNote(item.id)} />)
           : noteToShow.map((item) => <Notes key={item.id} notes={item.content} toggleImportance={() => toggleImportance(item.id)} deleteNote={() => deleteNote(item.id)} />)
       }
+      <Footer />
     </div>
   )
 }
