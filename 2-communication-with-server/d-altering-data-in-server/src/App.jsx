@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import Notes from './components/Notes'
-import axios from 'axios'
 import noteService from './components/services/notes'
+import './index.css'
+import Notifications from './components/Notifications'
 
 const App = () => {
   const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState('')
   const [showNotes, setshowNotes] = useState(true)
+  const [erorMessage, setErorMessage] = useState('some error happend...')
 
   // get request to fetch data from json server
   useEffect(() => {
@@ -73,6 +75,7 @@ const App = () => {
   return (
     <div>
       <h1>Notes</h1>
+      <Notifications message={erorMessage} />
       <div>
         <button onClick={() => setshowNotes(!showNotes)}>show {showNotes ? 'important' : 'all'}</button>
       </div>
