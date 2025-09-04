@@ -27,7 +27,7 @@ const App = () => {
           type="text" />
         <button type='submit'>Exchange Rates</button>
       </form>
-      { }
+      {JSON.stringify(rates, null, 2)}
     </div>
   )
 }
