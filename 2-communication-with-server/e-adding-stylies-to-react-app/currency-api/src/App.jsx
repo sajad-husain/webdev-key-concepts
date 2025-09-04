@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import axios from 'axios'
 
 const App = () => {
   const [value, setValue] = useState('')
@@ -8,7 +9,10 @@ const App = () => {
   useEffect(() => {
     console.log('effect run, currency is now', currency);
 
-  }, [])
+    axios.get(`https://open.er-api.com/v6/latest/${currency}`)
+      .then(response => setRates(response.data.rates))
+
+  }, [currency])
   return (
     <div>
       <form onSubmit={currencyHandler}>
