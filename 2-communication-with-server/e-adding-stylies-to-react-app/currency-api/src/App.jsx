@@ -13,6 +13,11 @@ const App = () => {
       .then(response => setRates(response.data.rates))
 
   }, [currency])
+
+  const currencyHandler = e => {
+    e.preventDefault()
+    setCurrency(value)
+  }
   return (
     <div>
       <form onSubmit={currencyHandler}>
