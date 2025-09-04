@@ -2,7 +2,13 @@ import React from 'react'
 
 const App = () => {
   return (
-    <div>App</div>
+    <div>
+      <form onSubmit={currencyHandler}>
+        Currency: <input type="text" />
+        <button type='submit'>Exchange Rates</button>
+      </form>
+      { }
+    </div>
   )
 }
 
