@@ -23,7 +23,7 @@ app.get('/', (request, response) => {
     response.send('<h1>Hello World From HomPage</h1>')
 })
 
-app.get('/notes', (request, response) => {
+app.get('/api/notes', (request, response) => {
     response.json(notes)
 })
 
