@@ -27,6 +27,9 @@ app.get('/api/notes', (request, response) => {
     response.json(notes)
 })
 
+// node --watch index.js
+// this command is used to track automatic change tracking in our app
+
 const PORT = 3001
 app.listen(PORT)
 console.log(`Server running on port ${PORT}`)
