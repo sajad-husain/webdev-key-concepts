@@ -19,8 +19,10 @@ let notes = [
 ]
 
 const app = http.createServer((request, response) => {
-    response.writeHead(200, { 'Content-Type': 'text/plain' })
-    response.end('Hello Sajjad')
+    response.writeHead(200, { 'Content-Type': 'application/josn' })
+    console.log(notes);
+
+    response.end(JSON.stringify(notes))
 })
 
 const PORT = 3001
