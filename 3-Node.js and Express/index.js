@@ -1,4 +1,5 @@
-const http = require('http')
+const express = require('express')
+const app = express();
 
 let notes = [
     {
@@ -18,12 +19,10 @@ let notes = [
     }
 ]
 
-const app = http.createServer((request, response) => {
-    response.writeHead(200, { 'Content-Type': 'application/josn' })
-    console.log(notes);
-
-    response.end(JSON.stringify(notes))
+app.get('/', (request, response) => {
+    response.send('<h1>Hello World From HomPage</h1>')
 })
+
 
 const PORT = 3001
 app.listen(PORT)
