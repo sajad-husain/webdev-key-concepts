@@ -37,7 +37,7 @@ app.get('/api/notes', (request, response) => {
 
 app.get('/api/notes/:id', (request, response) => {
     const id = request.params.id
-    const note = notes.find(note => note.id == id)
+    const note = notes.find(note => note.id == id) // finds id which matches  with parameter id
     response.json(note)
 })
 // node --watch index.js
