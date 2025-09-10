@@ -40,6 +40,7 @@ app.get('/api/notes/:id', (request, response) => {
     const note = notes.find(note => note.id == id) // finds id which matches  with parameter id
     response.json(note)
 
+    // code added for error handling
     if (note) {
         response.json(note)
     } else {
