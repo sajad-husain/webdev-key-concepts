@@ -52,6 +52,8 @@ app.get('/api/notes/:id', (request, response) => {
 app.delete('/api/notes/:id', (request, response) => {
     const id = request.params.id
     const note = notes.filter(note => note.id !== id)
+
+    note.status(204).end()
 })
 // node --watch index.js
 // this command is used to track automatic change tracking in our app
