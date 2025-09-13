@@ -27,6 +27,8 @@ let notes = [
 // notes / 10	PUT	replaces the entire identified resource with the request data
 // notes / 10	PATCH	replaces a part of the identified resource with the request data
 
+
+
 app.get('/', (request, response) => {
     response.send('<h1>Hello World From HomPage</h1>')
 })
@@ -46,6 +48,10 @@ app.get('/api/notes/:id', (request, response) => {
     } else {
         response.status(400).end()
     }
+})
+
+app.post('/api/notes', (request, response) => {
+
 })
 
 // sending delete request to my server
