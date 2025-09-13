@@ -51,7 +51,8 @@ app.get('/api/notes/:id', (request, response) => {
 })
 
 app.post('/api/notes', (request, response) => {
-
+    const note = request.body
+    response.json(note)
 })
 
 // sending delete request to my server
