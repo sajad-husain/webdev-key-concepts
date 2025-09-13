@@ -28,6 +28,7 @@ let notes = [
 // notes / 10	PATCH	replaces a part of the identified resource with the request data
 
 
+app.use(express.json())// to access data we need this express json parser 
 
 app.get('/', (request, response) => {
     response.send('<h1>Hello World From HomPage</h1>')
@@ -37,6 +38,9 @@ app.get('/api/notes', (request, response) => {
     response.json(notes)
 })
 
+app.get('/test', (req, res) => {
+    res.send('server is working')
+})
 app.get('/api/notes/:id', (request, response) => {
     const id = request.params.id
     const note = notes.find(note => note.id == id) // finds id which matches  with parameter id
@@ -50,7 +54,6 @@ app.get('/api/notes/:id', (request, response) => {
     }
 })
 
-app.use(express.json)// to access data we need this express json parser 
 
 app.post('/api/notes', (request, response) => {
     const note = request.body
