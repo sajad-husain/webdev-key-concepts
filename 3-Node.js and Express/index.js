@@ -50,7 +50,7 @@ app.get('/api/notes/:id', (request, response) => {
     }
 })
 
-app.use(express.json)
+app.use(express.json)// to access data we need this express json parser 
 
 app.post('/api/notes', (request, response) => {
     const note = request.body
