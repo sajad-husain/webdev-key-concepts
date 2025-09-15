@@ -61,6 +61,10 @@ app.post('/api/notes', (request, response) => {
         : 0
 
     const note = request.body
+    note.id = String(maxId + 1)
+
+    notes = notes.concat(note)
+
     response.json(note)
 })
 
