@@ -1,7 +1,7 @@
 # GET http://localhost:3001/api/notes/
 
-POST  http://localhost:3001/api/notes/2
-Content-Type: application/json
+POST  http://localhost:3001/api/notes
+Content-Type: text/plain
 
 {
     "content": 'vs code is good',
