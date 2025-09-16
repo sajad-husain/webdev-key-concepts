@@ -78,7 +78,6 @@ app.delete('/api/notes/:id', (request, response) => {
 // node --watch index.js
 // this command is used to track automatic change tracking in our app
 
-console.log('automatic tracking is working');
 
 
 const PORT = 3001
