@@ -1,0 +1,69 @@
+import { describe, expect, it } from '@jest/globals';
+
+import {
+  addDaysKey,
+  levelForXp,
+  streakFor,
+  todayKey,
+  LEVEL_TITLES,
+} from '@/services/gamification';
+
+describe('levelForXp', () => {
+  it('starts at level 1 with zero progress', () => {
+    const level = levelForXp(0);
+    expect(level.level).toBe(1);
+    expect(level.title).toBe(LEVEL_TITLES[0]);
+    expect(level.progress).toBe(0);
+  });
+
+  it('enters level 2 at the 100 xp threshold', () => {
+    const atThreshold = levelForXp(100);
+    expect(atThreshold.level).toBe(2);
+    expect(atThreshold.min).toBe(100);
+    expect(atThreshold.next).toBe(300);
+  });
+
+  it('reports mid-level progress between thresholds', () => {
+    // level 2 spans 100..300, so 200 is halfway
+    expect(levelForXp(200).progress).toBe(0.5);
+  });
+
+  it('returns a title even past the title list', () => {
+    const high = levelForXp(100_000);
+    expect(high.level).toBeGreaterThan(LEVEL_TITLES.length);
+    expect(high.title).toBe(LEVEL_TITLES[LEVEL_TITLES.length - 1]);
+  });
+});
+
+describe('date keys', () => {
+  it('formats today as YYYY-MM-DD', () => {
+    expect(todayKey()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('adds and subtracts days across month boundaries', () => {
+    expect(addDaysKey('2025-11-30', 1)).toBe('2025-12-01');
+    expect(addDaysKey('2025-12-01', -1)).toBe('2025-11-30');
+  });
+});
+
+describe('streakFor', () => {
+  it('is zero when nothing has been checked', () => {
+    expect(streakFor([], '2025-11-29')).toBe(0);
+  });
+
+  it('counts a run ending today', () => {
+    const days = ['2025-11-27', '2025-11-28', '2025-11-29'];
+    expect(streakFor(days, '2025-11-29')).toBe(3);
+  });
+
+  it('resets when the run is broken', () => {
+    const days = ['2025-11-26', '2025-11-27', '2025-11-29'];
+    // 11-28 is missing, so only today counts
+    expect(streakFor(days, '2025-11-29')).toBe(1);
+  });
+
+  it('ignores days older than the current run', () => {
+    const days = ['2025-11-01', '2025-11-28', '2025-11-29'];
+    expect(streakFor(days, '2025-11-29')).toBe(2);
+  });
+});
