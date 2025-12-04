@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AnimatedIcon } from '@/components/animated-icon';
@@ -7,57 +7,90 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { ProgressBar } from '@/components/ui/progress-bar';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-const highlights = [
-  {
-    title: 'Score each day',
-    body: 'Keep a running counter of your wins, losses, and ties — a little scoreboard for life.',
-  },
-  {
-    title: 'Make a list',
-    body: 'Track the things that actually matter and tick them off one by one.',
-  },
-  {
-    title: 'Stay on track',
-    body: 'It all stays on your phone. No account, no cloud, just you.',
-  },
-];
+import { levelForXp, todayKey } from '@/services/gamification';
+import { getStreak } from '@/services/state';
+import { useGame } from '@/store/game-provider';
 
 export default function HomeScreen() {
+  const { state } = useGame();
+  const info = levelForXp(state.profile.xp);
+  const streak = getStreak(state);
+  const openQuests = state.quests.filter((quest) => !quest.done).length;
+  const today = todayKey();
+  const routinesToday = state.routines.filter((routine) => routine.history.includes(today)).length;
+  const winsToday = (state.wins[today] ?? []).length;
+  const xpToNext = Math.max(0, info.next - state.profile.xp);
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <ThemedView style={styles.heroLogo}>
+        <ThemedView style={styles.hero}>
+          <View style={styles.heroLogo}>
             <AnimatedIcon />
-          </ThemedView>
+          </View>
           <ThemedText type="title" style={styles.title}>
             Life&apos;s a game
           </ThemedText>
-          <ThemedText style={styles.tagline} themeColor="textSecondary">
-            Keep score, keep lists, keep going.
+          <ThemedText style={styles.sub} themeColor="textSecondary">
+            Level {info.level} {info.title}
           </ThemedText>
         </ThemedView>
 
-        <ThemedText type="code" style={styles.code}>
-          how it works
-        </ThemedText>
-
-        <ThemedView style={styles.highlights}>
-          {highlights.map((item) => (
-            <Card key={item.title} style={styles.card}>
-              <ThemedText type="smallBold">{item.title}</ThemedText>
+        <ThemedView style={styles.body}>
+          <Card style={styles.xpCard}>
+            <ThemedView style={styles.xpHeader}>
+              <ThemedText type="smallBold">XP</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
-                {item.body}
+                {state.profile.xp} / {info.next}
+              </ThemedText>
+            </ThemedView>
+            <ProgressBar progress={info.progress} height={12} />
+            <ThemedText type="small" themeColor="textSecondary">
+              {xpToNext} XP to level {info.level + 1}
+            </ThemedText>
+          </Card>
+
+          <ThemedView style={styles.statsRow}>
+            <Card style={styles.statCard}>
+              <ThemedText type="subtitle" themeColor="success">
+                {streak}
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                day streak
               </ThemedText>
             </Card>
-          ))}
+            <Card style={styles.statCard}>
+              <ThemedText type="subtitle">{openQuests}</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                open quests
+              </ThemedText>
+            </Card>
+          </ThemedView>
+
+          <Card style={styles.todayCard}>
+            <ThemedText type="smallBold">Today</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {routinesToday} of {state.routines.length} routines checked
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {winsToday} wins logged
+            </ThemedText>
+          </Card>
+
+          <Button
+            title="Pick a quest"
+            style={styles.cta}
+            onPress={() => router.navigate('/list')}
+          />
+          <Button
+            title="Log a win"
+            variant="secondary"
+            style={styles.cta}
+            onPress={() => router.navigate('/settings')}
+          />
         </ThemedView>
-
-        <Button title="Start scoring" style={styles.cta} onPress={() => router.navigate('/settings')} />
-
-        {Platform.OS === 'web' && <ThemedText type="small">also runs in the browser</ThemedText>}
       </SafeAreaView>
     </ThemedView>
   );
@@ -66,46 +99,56 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     flexDirection: 'row',
+    justifyContent: 'center',
   },
   safeArea: {
     flex: 1,
     paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
     paddingBottom: BottomTabInset + Spacing.three,
     maxWidth: MaxContentWidth,
   },
-  heroSection: {
+  hero: {
     alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.three,
+    paddingVertical: Spacing.five,
+    gap: Spacing.two,
   },
   heroLogo: {
     marginBottom: Spacing.two,
   },
   title: {
     textAlign: 'center',
+    fontSize: 36,
+    lineHeight: 40,
   },
-  tagline: {
+  sub: {
     textAlign: 'center',
-    fontSize: 18,
   },
-  code: {
-    textTransform: 'uppercase',
-  },
-  highlights: {
+  body: {
+    flex: 1,
     gap: Spacing.three,
-    alignSelf: 'stretch',
   },
-  card: {
-    padding: Spacing.three,
+  xpCard: {
+    gap: Spacing.two,
+  },
+  xpHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: Spacing.three,
+  },
+  statCard: {
+    flex: 1,
+    alignItems: 'center',
+    gap: Spacing.half,
+  },
+  todayCard: {
+    gap: Spacing.one,
   },
   cta: {
-    alignSelf: 'stretch',
-    marginTop: Spacing.two,
+    marginTop: Spacing.one,
   },
 });
