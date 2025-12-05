@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -8,39 +8,20 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { getItem, setItem } from '@/services/storage';
+import { XP } from '@/services/gamification';
+import { useGame } from '@/store/game-provider';
 
-const ITEMS_KEY = 'items';
-
-export default function ListScreen() {
-  const [items, setItems] = useState<string[]>([]);
+export default function QuestsScreen() {
+  const { state, dispatch } = useGame();
   const [draft, setDraft] = useState('');
-  const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => {
-    getItem<string[]>(ITEMS_KEY, []).then((value) => {
-      setItems(value);
-      setHydrated(true);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (hydrated) {
-      setItem(ITEMS_KEY, items);
-    }
-  }, [items, hydrated]);
-
-  const addItem = () => {
+  const addQuest = () => {
     const trimmed = draft.trim();
     if (!trimmed) {
       return;
     }
-    setItems((previous) => [...previous, trimmed]);
+    dispatch({ type: 'quests/add', title: trimmed, xp: XP.questDefault });
     setDraft('');
-  };
-
-  const removeItem = (index: number) => {
-    setItems((previous) => previous.filter((_, i) => i !== index));
   };
 
   return (
@@ -50,37 +31,56 @@ export default function ListScreen() {
           style={styles.keyboard}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ThemedView style={styles.headerSection}>
-            <ThemedText type="subtitle">Things to do</ThemedText>
+            <ThemedText type="subtitle">Quests</ThemedText>
             <ThemedText themeColor="textSecondary">
-              Add what matters, tick it off the list.
+              Short-term goals. Finish one, bank the XP.
             </ThemedText>
           </ThemedView>
 
           <ThemedView style={styles.composer}>
             <Input
-              placeholder="What needs doing?"
+              placeholder="What are you taking on?"
               value={draft}
               onChangeText={setDraft}
-              onSubmitEditing={addItem}
+              onSubmitEditing={addQuest}
               returnKeyType="done"
               style={styles.input}
             />
-            <Button title="Add" onPress={addItem} />
+            <Button title="Add" onPress={addQuest} />
           </ThemedView>
 
           <FlatList
-            data={items}
+            data={state.quests}
+            keyExtractor={(quest) => quest.id}
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={styles.listContent}
             ListEmptyComponent={
               <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
-                Nothing yet — add your first item above.
+                No quests yet — add your first one above.
               </ThemedText>
             }
-            renderItem={({ item, index }) => (
+            renderItem={({ item }) => (
               <Card style={styles.row}>
-                <ThemedText style={styles.rowText}>{item}</ThemedText>
-                <Button title="Remove" variant="ghost" onPress={() => removeItem(index)} />
+                <Pressable
+                  style={styles.rowPressable}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: item.done }}
+                  onPress={() => dispatch({ type: 'quests/toggle', id: item.id })}>
+                  <ThemedText
+                    type="smallBold"
+                    themeColor={item.done ? 'success' : 'text'}
+                    style={item.done && styles.doneText}>
+                    {item.title}
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    +{item.xp} XP
+                  </ThemedText>
+                </Pressable>
+                <Button
+                  title="Remove"
+                  variant="ghost"
+                  onPress={() => dispatch({ type: 'quests/remove', id: item.id })}
+                />
               </Card>
             )}
           />
@@ -131,8 +131,12 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     gap: Spacing.three,
   },
-  rowText: {
+  rowPressable: {
     flex: 1,
+    gap: Spacing.half,
+  },
+  doneText: {
+    textDecorationLine: 'line-through',
   },
   empty: {
     textAlign: 'center',
