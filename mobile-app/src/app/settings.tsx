@@ -1,65 +1,93 @@
-import { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { FlatList, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
-import { getItem, setItem } from '@/services/storage';
+import { Input } from '@/components/ui/input';
+import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { todayKey } from '@/services/gamification';
+import { useGame } from '@/store/game-provider';
 
-const SCORE_KEY = 'score';
+const WIN_POINTS = [5, 10, 15] as const;
 
-export default function SettingsScreen() {
-  const theme = useTheme();
-  const [count, setCount] = useState(0);
-  const [hydrated, setHydrated] = useState(false);
+export default function WinsScreen() {
+  const { state, dispatch } = useGame();
+  const [note, setNote] = useState('');
+  const today = todayKey();
+  const wins = state.wins[today] ?? [];
+  const todayPoints = wins.reduce((sum, win) => sum + win.points, 0);
 
-  useEffect(() => {
-    getItem<number>(SCORE_KEY, 0).then((value) => {
-      setCount(value);
-      setHydrated(true);
+  const addWin = (points: (typeof WIN_POINTS)[number]) => {
+    dispatch({
+      type: 'wins/add',
+      date: today,
+      note: note.trim() || 'A small win',
+      points,
     });
-  }, []);
-
-  useEffect(() => {
-    if (hydrated) {
-      setItem(SCORE_KEY, count);
-    }
-  }, [count, hydrated]);
-
-  const adjust = (next: number) => setCount(Math.max(0, next));
+    setNote('');
+  };
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ThemedView style={styles.headerSection}>
-          <ThemedText type="subtitle">Score today</ThemedText>
+          <ThemedText type="subtitle">Today&apos;s wins</ThemedText>
           <ThemedText themeColor="textSecondary">
-            Life&apos;s a game — keep track of the score.
+            Log the little wins — their points feed straight into your XP.
           </ThemedText>
         </ThemedView>
 
-        <Card style={styles.scoreCard}>
-          <ThemedView style={[styles.scoreCircle, { borderColor: theme.border }]}>
-            <ThemedText type="title">{count}</ThemedText>
-          </ThemedView>
-          <ThemedText themeColor="textSecondary" style={styles.scoreLabel}>
-            current score
-          </ThemedText>
+        <ThemedView style={styles.composer}>
+          <Input
+            placeholder="What went well today?"
+            value={note}
+            onChangeText={setNote}
+            returnKeyType="done"
+            style={styles.input}
+          />
+        </ThemedView>
 
-          <ThemedView style={styles.actions}>
-            <Button title="– 1" variant="ghost" onPress={() => adjust(count - 1)} />
-            <Button title="+ 1" onPress={() => adjust(count + 1)} />
-            <Button title="Reset" variant="secondary" onPress={() => adjust(0)} />
-          </ThemedView>
+        <ThemedView style={styles.chipRow}>
+          {WIN_POINTS.map((points) => (
+            <Button
+              key={points}
+              title={`+${points}`}
+              variant={points === 10 ? 'primary' : 'secondary'}
+              onPress={() => addWin(points)}
+            />
+          ))}
+        </ThemedView>
 
-          <ThemedText type="small" themeColor="textSecondary" style={styles.savedHint}>
-            your score is saved on this device
-          </ThemedText>
-        </Card>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.pointsLabel}>
+          {todayPoints} XP so far today
+        </ThemedText>
+
+        <FlatList
+          data={wins}
+          keyExtractor={(win) => win.id}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
+              No wins logged yet — go earn one.
+            </ThemedText>
+          }
+          renderItem={({ item }) => (
+            <Card style={styles.row}>
+              <ThemedText style={styles.rowText}>{item.note}</ThemedText>
+              <ThemedText type="smallBold" themeColor="success">
+                +{item.points}
+              </ThemedText>
+              <Button
+                title="Remove"
+                variant="ghost"
+                onPress={() => dispatch({ type: 'wins/remove', date: today, id: item.id })}
+              />
+            </Card>
+          )}
+        />
       </SafeAreaView>
     </ThemedView>
   );
@@ -74,40 +102,46 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     maxWidth: MaxContentWidth,
+    width: '100%',
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.five,
     paddingBottom: BottomTabInset + Spacing.three,
-    gap: Spacing.five,
+    gap: Spacing.three,
   },
   headerSection: {
     paddingHorizontal: Spacing.two,
     gap: Spacing.one,
   },
-  scoreCard: {
-    alignItems: 'center',
-    gap: Spacing.three,
-    padding: Spacing.five,
-  },
-  scoreCircle: {
-    width: 160,
-    height: 160,
-    borderRadius: Radius.pill,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scoreLabel: {
-    textTransform: 'uppercase',
-    fontSize: 13,
-    letterSpacing: 1,
-  },
-  actions: {
+  composer: {
     flexDirection: 'row',
     gap: Spacing.two,
-    flexWrap: 'wrap',
-    justifyContent: 'center',
   },
-  savedHint: {
-    marginTop: Spacing.two,
+  input: {
+    flex: 1,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  pointsLabel: {
+    paddingHorizontal: Spacing.two,
+  },
+  listContent: {
+    gap: Spacing.two,
+    paddingBottom: Spacing.three,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.three,
+    gap: Spacing.three,
+  },
+  rowText: {
+    flex: 1,
+  },
+  empty: {
+    textAlign: 'center',
+    marginTop: Spacing.five,
   },
 });
