@@ -24,8 +24,17 @@ export default function AppTabs() {
           <TabTrigger name="home" href="/" asChild>
             <TabButton>Home</TabButton>
           </TabTrigger>
-          <TabTrigger name="about" href="/about" asChild>
-            <TabButton>About</TabButton>
+          <TabTrigger name="quests" href="/list" asChild>
+            <TabButton>Quests</TabButton>
+          </TabTrigger>
+          <TabTrigger name="goals" href="/goals" asChild>
+            <TabButton>Goals</TabButton>
+          </TabTrigger>
+          <TabTrigger name="routines" href="/routines" asChild>
+            <TabButton>Routines</TabButton>
+          </TabTrigger>
+          <TabTrigger name="wins" href="/settings" asChild>
+            <TabButton>Wins</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -93,6 +102,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: Spacing.two,
     maxWidth: MaxContentWidth,
+    overflow: 'hidden',
   },
   brandText: {
     marginRight: 'auto',
