@@ -64,16 +64,15 @@ export function addDaysKey(key: string, delta: number): string {
 }
 
 /**
- * Counts consecutive "active" days ending today. An entry for today is
- * required; a gap on the most recent day resets the streak.
- *
- * NOTE: known gap — a streak that is still alive but has no entry for today
- * yet (today is pending) is reported as zero.
+ * Counts consecutive "active" days ending at (or just before) today. If today
+ * hasn't been played yet the streak still counts from yesterday — missing a
+ * full day is what actually breaks it.
  */
 export function streakFor(activeDays: string[], today: string): number {
   const active = new Set(activeDays);
+  const start = active.has(today) ? today : addDaysKey(today, -1);
   let streak = 0;
-  let cursor = today;
+  let cursor = start;
 
   while (active.has(cursor)) {
     streak += 1;

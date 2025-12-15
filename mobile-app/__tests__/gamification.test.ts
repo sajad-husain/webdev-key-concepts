@@ -66,4 +66,16 @@ describe('streakFor', () => {
     const days = ['2025-11-01', '2025-11-28', '2025-11-29'];
     expect(streakFor(days, '2025-11-29')).toBe(2);
   });
+
+  it('keeps an alive streak when today has not been checked yet', () => {
+    // 11-29 is pending and 11-28 was checked — the streak must survive.
+    const days = ['2025-11-27', '2025-11-28'];
+    expect(streakFor(days, '2025-11-29')).toBe(2);
+  });
+
+  it('does not let the pending-today window mask a real miss', () => {
+    // 11-28 is missing, so counting from yesterday must still reset.
+    const days = ['2025-11-27', '2025-11-29'];
+    expect(streakFor(days, '2025-11-29')).toBe(1);
+  });
 });
