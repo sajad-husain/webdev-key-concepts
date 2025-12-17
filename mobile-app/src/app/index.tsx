@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedIcon } from '@/components/animated-icon';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { AnimatedRow } from '@/components/ui/animated-row';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
@@ -39,34 +40,40 @@ export default function HomeScreen() {
         </ThemedView>
 
         <ThemedView style={styles.body}>
-          <Card style={styles.xpCard}>
-            <ThemedView style={styles.xpHeader}>
-              <ThemedText type="smallBold">XP</ThemedText>
+          <AnimatedRow>
+            <Card style={styles.xpCard}>
+              <ThemedView style={styles.xpHeader}>
+                <ThemedText type="smallBold">XP</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {state.profile.xp} / {info.next}
+                </ThemedText>
+              </ThemedView>
+              <ProgressBar progress={info.progress} height={12} />
               <ThemedText type="small" themeColor="textSecondary">
-                {state.profile.xp} / {info.next}
+                {xpToNext} XP to level {info.level + 1}
               </ThemedText>
-            </ThemedView>
-            <ProgressBar progress={info.progress} height={12} />
-            <ThemedText type="small" themeColor="textSecondary">
-              {xpToNext} XP to level {info.level + 1}
-            </ThemedText>
-          </Card>
+            </Card>
+          </AnimatedRow>
 
           <ThemedView style={styles.statsRow}>
-            <Card style={styles.statCard}>
-              <ThemedText type="subtitle" themeColor="success">
-                {streak}
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                day streak
-              </ThemedText>
-            </Card>
-            <Card style={styles.statCard}>
-              <ThemedText type="subtitle">{openQuests}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                open quests
-              </ThemedText>
-            </Card>
+            <AnimatedRow delay={60}>
+              <Card style={styles.statCard}>
+                <ThemedText type="subtitle" themeColor="success">
+                  {streak}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  day streak
+                </ThemedText>
+              </Card>
+            </AnimatedRow>
+            <AnimatedRow delay={120}>
+              <Card style={styles.statCard}>
+                <ThemedText type="subtitle">{openQuests}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  open quests
+                </ThemedText>
+              </Card>
+            </AnimatedRow>
           </ThemedView>
 
           <Card style={styles.todayCard}>

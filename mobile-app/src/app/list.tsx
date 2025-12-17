@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { AnimatedRow } from '@/components/ui/animated-row';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -59,29 +60,31 @@ export default function QuestsScreen() {
                 No quests yet — add your first one above.
               </ThemedText>
             }
-            renderItem={({ item }) => (
-              <Card style={styles.row}>
-                <Pressable
-                  style={styles.rowPressable}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: item.done }}
-                  onPress={() => dispatch({ type: 'quests/toggle', id: item.id })}>
-                  <ThemedText
-                    type="smallBold"
-                    themeColor={item.done ? 'success' : 'text'}
-                    style={item.done && styles.doneText}>
-                    {item.title}
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    +{item.xp} XP
-                  </ThemedText>
-                </Pressable>
-                <Button
-                  title="Remove"
-                  variant="ghost"
-                  onPress={() => dispatch({ type: 'quests/remove', id: item.id })}
-                />
-              </Card>
+            renderItem={({ item, index }) => (
+              <AnimatedRow delay={index * 40}>
+                <Card style={styles.row}>
+                  <Pressable
+                    style={styles.rowPressable}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: item.done }}
+                    onPress={() => dispatch({ type: 'quests/toggle', id: item.id })}>
+                    <ThemedText
+                      type="smallBold"
+                      themeColor={item.done ? 'success' : 'text'}
+                      style={item.done && styles.doneText}>
+                      {item.title}
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      +{item.xp} XP
+                    </ThemedText>
+                  </Pressable>
+                  <Button
+                    title="Remove"
+                    variant="ghost"
+                    onPress={() => dispatch({ type: 'quests/remove', id: item.id })}
+                  />
+                </Card>
+              </AnimatedRow>
             )}
           />
         </KeyboardAvoidingView>

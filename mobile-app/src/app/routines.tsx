@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { AnimatedRow } from '@/components/ui/animated-row';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -98,33 +99,35 @@ export default function RoutinesScreen() {
                 No routines yet — build your daily loop above.
               </ThemedText>
             }
-            renderItem={({ item }) => {
+            renderItem={({ item, index }) => {
               const checkedToday = item.history.includes(today);
               return (
-                <Card style={styles.row}>
-                  <Pressable
-                    style={styles.rowPressable}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: checkedToday }}
-                    onPress={() => dispatch({ type: 'routines/toggleDay', id: item.id, date: today })}>
-                    <ThemedText
-                      type="smallBold"
-                      themeColor={checkedToday ? 'success' : 'text'}
-                      style={checkedToday && styles.doneText}>
-                      {item.title}
-                    </ThemedText>
-                    {item.reminderTime && (
-                      <ThemedText type="small" themeColor="textSecondary">
-                        reminders at {item.reminderTime}
+                <AnimatedRow delay={index * 40}>
+                  <Card style={styles.row}>
+                    <Pressable
+                      style={styles.rowPressable}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: checkedToday }}
+                      onPress={() => dispatch({ type: 'routines/toggleDay', id: item.id, date: today })}>
+                      <ThemedText
+                        type="smallBold"
+                        themeColor={checkedToday ? 'success' : 'text'}
+                        style={checkedToday && styles.doneText}>
+                        {item.title}
                       </ThemedText>
-                    )}
-                  </Pressable>
-                  <Button
-                    title="Remove"
-                    variant="ghost"
-                    onPress={() => dispatch({ type: 'routines/remove', id: item.id })}
-                  />
-                </Card>
+                      {item.reminderTime && (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          reminders at {item.reminderTime}
+                        </ThemedText>
+                      )}
+                    </Pressable>
+                    <Button
+                      title="Remove"
+                      variant="ghost"
+                      onPress={() => dispatch({ type: 'routines/remove', id: item.id })}
+                    />
+                  </Card>
+                </AnimatedRow>
               );
             }}
           />

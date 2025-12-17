@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { AnimatedRow } from '@/components/ui/animated-row';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -45,30 +46,31 @@ function GoalCard({ goal }: { goal: Goal }) {
       <ProgressBar progress={ratio} height={8} />
 
       <ThemedView style={styles.milestones}>
-        {goal.milestones.map((milestone) => {
+        {goal.milestones.map((milestone, index) => {
           const done = milestone.done;
           const boxColor: ThemeColor = done ? 'success' : 'textSecondary';
           return (
-            <Pressable
-              key={milestone.id}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: done }}
-              style={styles.milestoneRow}
-              onPress={() =>
-                dispatch({ type: 'goals/toggleMilestone', goalId: goal.id, milestoneId: milestone.id })
-              }>
-              <ThemedView
-                style={[styles.checkbox, { borderColor: theme[boxColor] }]}
-                type={done ? 'backgroundSelected' : undefined}>
-                {done && <ThemedView style={[styles.checkboxFill, { backgroundColor: theme.success }]} />}
-              </ThemedView>
-              <ThemedText
-                type="small"
-                themeColor={done ? 'success' : 'text'}
-                style={done && styles.doneText}>
-                {milestone.title}
-              </ThemedText>
-            </Pressable>
+            <AnimatedRow key={milestone.id} delay={index * 60}>
+              <Pressable
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: done }}
+                style={styles.milestoneRow}
+                onPress={() =>
+                  dispatch({ type: 'goals/toggleMilestone', goalId: goal.id, milestoneId: milestone.id })
+                }>
+                <ThemedView
+                  style={[styles.checkbox, { borderColor: theme[boxColor] }]}
+                  type={done ? 'backgroundSelected' : undefined}>
+                  {done && <ThemedView style={[styles.checkboxFill, { backgroundColor: theme.success }]} />}
+                </ThemedView>
+                <ThemedText
+                  type="small"
+                  themeColor={done ? 'success' : 'text'}
+                  style={done && styles.doneText}>
+                  {milestone.title}
+                </ThemedText>
+              </Pressable>
+            </AnimatedRow>
           );
         })}
       </ThemedView>
@@ -148,7 +150,11 @@ export default function GoalsScreen() {
                 No goals yet — add your first one above.
               </ThemedText>
             }
-            renderItem={({ item }) => <GoalCard goal={item} />}
+            renderItem={({ item, index }) => (
+              <AnimatedRow delay={index * 40}>
+                <GoalCard goal={item} />
+              </AnimatedRow>
+            )}
           />
         </KeyboardAvoidingView>
       </SafeAreaView>

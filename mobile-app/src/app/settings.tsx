@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { AnimatedRow } from '@/components/ui/animated-row';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -74,18 +75,20 @@ export default function WinsScreen() {
               No wins logged yet — go earn one.
             </ThemedText>
           }
-          renderItem={({ item }) => (
-            <Card style={styles.row}>
-              <ThemedText style={styles.rowText}>{item.note}</ThemedText>
-              <ThemedText type="smallBold" themeColor="success">
-                +{item.points}
-              </ThemedText>
-              <Button
-                title="Remove"
-                variant="ghost"
-                onPress={() => dispatch({ type: 'wins/remove', date: today, id: item.id })}
-              />
-            </Card>
+          renderItem={({ item, index }) => (
+            <AnimatedRow delay={index * 40}>
+              <Card style={styles.row}>
+                <ThemedText style={styles.rowText}>{item.note}</ThemedText>
+                <ThemedText type="smallBold" themeColor="success">
+                  +{item.points}
+                </ThemedText>
+                <Button
+                  title="Remove"
+                  variant="ghost"
+                  onPress={() => dispatch({ type: 'wins/remove', date: today, id: item.id })}
+                />
+              </Card>
+            </AnimatedRow>
           )}
         />
       </SafeAreaView>
