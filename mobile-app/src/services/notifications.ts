@@ -9,7 +9,7 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
     shouldShowList: true,
-    shouldPlaySound: false,
+    shouldPlaySound: true,
     shouldSetBadge: false,
   }),
 });
@@ -25,7 +25,9 @@ async function ensureChannel(): Promise<void> {
   }
   await Notifications.setNotificationChannelAsync('daily', {
     name: 'Daily reminders',
-    importance: Notifications.AndroidImportance.DEFAULT,
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: 'default',
+    vibrationPattern: [0, 250, 250, 250],
   });
 }
 
@@ -86,6 +88,7 @@ export async function rescheduleDaily(
       content: {
         title: 'Life is a game',
         body: `Daily routine reminder: ${routine.title}`,
+        sound: 'default',
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
