@@ -53,6 +53,32 @@ export async function ensurePermissions(): Promise<boolean> {
 }
 
 /**
+ * Fires a one-off test notification in a few seconds so the alarm sound and
+ * in-app overlay can be verified without waiting for the set time.
+ */
+export async function scheduleTestAlarm(): Promise<void> {
+  if (!supported()) {
+    return;
+  }
+  await ensureChannel();
+  const granted = await ensurePermissions();
+  if (!granted) {
+    return;
+  }
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'Alarm test',
+      body: 'This is how your daily reminder will sound.',
+      sound: 'default',
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: 5,
+    },
+  });
+}
+
+/**
  * Rebuilds the daily reminder schedule for all routines. Cancels everything
  * first so removed reminders don't linger, and skips work on web or without
  * permission.

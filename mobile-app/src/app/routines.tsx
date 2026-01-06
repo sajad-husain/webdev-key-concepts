@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import * as Notifications from 'expo-notifications';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { todayKey } from '@/services/gamification';
-import { rescheduleDaily } from '@/services/notifications';
+import { rescheduleDaily, scheduleTestAlarm } from '@/services/notifications';
 import { useGame } from '@/store/game-provider';
 
 const TIME_PATTERN = /^([01]?\d|2[0-3]):[0-5]\d$/;
@@ -21,6 +22,7 @@ export default function RoutinesScreen() {
   const theme = useTheme();
   const [title, setTitle] = useState('');
   const [reminder, setReminder] = useState('');
+  const [alarmTitle, setAlarmTitle] = useState<string | null>(null);
   const today = todayKey();
 
   useEffect(() => {
@@ -29,6 +31,16 @@ export default function RoutinesScreen() {
     }
     void rescheduleDaily(state.routines, state.settings.notifications);
   }, [state.routines, state.settings.notifications, hydrated]);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      return;
+    }
+    const subscription = Notifications.addNotificationReceivedListener((notification) => {
+      setAlarmTitle(notification.request.content.body ?? 'Routine reminder');
+    });
+    return () => subscription.remove();
+  }, []);
 
   const addRoutine = () => {
     const trimmed = title.trim();
@@ -45,6 +57,21 @@ export default function RoutinesScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
+        {Platform.OS !== 'web' && alarmTitle && (
+          <ThemedView style={styles.alarmOverlay}>
+            <Card style={styles.alarmCard}>
+              <ThemedText type="smallBold" themeColor="tint">
+                Alarm
+              </ThemedText>
+              <ThemedText style={styles.alarmBody}>{alarmTitle}</ThemedText>
+              <Button
+                title="Dismiss"
+                variant="secondary"
+                onPress={() => setAlarmTitle(null)}
+              />
+            </Card>
+          </ThemedView>
+        )}
         <KeyboardAvoidingView
           style={styles.keyboard}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -67,6 +94,16 @@ export default function RoutinesScreen() {
                 thumbColor={theme.background}
               />
             </ThemedView>
+          )}
+
+          {Platform.OS !== 'web' && (
+            <Button
+              title="Test alarm"
+              variant="secondary"
+              onPress={() => {
+                void scheduleTestAlarm();
+              }}
+            />
           )}
 
           <ThemedView style={styles.composer}>
@@ -168,6 +205,18 @@ const styles = StyleSheet.create({
   reminderLabel: {
     marginRight: 'auto',
   },
+  alarmOverlay: {
+    position: 'absolute',
+    top: Spacing.three,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    paddingHorizontal: Spacing.three,
+  },
+  alarmCard: {
+    gap: Spacing.two,
+  },
+  alarmBody: {},
   composer: {
     flexDirection: 'row',
     gap: Spacing.two,
