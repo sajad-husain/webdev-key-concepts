@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   ReduceMotion,
   useAnimatedStyle,
@@ -11,15 +12,21 @@ import Animated, {
 import { Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+const AnimatedGradient = Animated.createAnimatedComponent(LinearGradient);
+
 type ProgressBarProps = {
   /** 0..1, values outside the range are clamped */
   progress: number;
   height?: number;
+  /** Optional gradient stops; defaults to the theme tint → accent blend */
+  colors?: readonly [string, string];
 };
 
-export function ProgressBar({ progress, height = 8 }: ProgressBarProps) {
+export function ProgressBar({ progress, height = 8, colors }: ProgressBarProps) {
   const theme = useTheme();
   const reduced = useReducedMotion();
+
+  const gradient = colors ?? [theme.tint, theme.accent];
 
   const progressValue = useSharedValue(0);
   useEffect(() => {
@@ -35,8 +42,11 @@ export function ProgressBar({ progress, height = 8 }: ProgressBarProps) {
 
   return (
     <Animated.View style={[styles.track, { backgroundColor: theme.backgroundElement, height }]}>
-      <Animated.View
-        style={[styles.fill, { backgroundColor: theme.tint, height }, animatedWidth]}
+      <AnimatedGradient
+        colors={gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={[styles.fill, { height }, animatedWidth]}
       />
     </Animated.View>
   );

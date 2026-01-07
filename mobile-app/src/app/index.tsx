@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,13 +10,15 @@ import { AnimatedRow } from '@/components/ui/animated-row';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { levelForXp, todayKey } from '@/services/gamification';
 import { getStreak } from '@/services/state';
 import { useGame } from '@/store/game-provider';
 
 export default function HomeScreen() {
   const { state } = useGame();
+  const theme = useTheme();
   const info = levelForXp(state.profile.xp);
   const streak = getStreak(state);
   const openQuests = state.quests.filter((quest) => !quest.done).length;
@@ -27,23 +30,29 @@ export default function HomeScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.hero}>
+        <LinearGradient
+          colors={[theme.tint, theme.accent]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.hero}>
           <View style={styles.heroLogo}>
             <AnimatedIcon />
           </View>
-          <ThemedText type="title" style={styles.title}>
+          <ThemedText type="title" style={[styles.title, { color: theme.tintContrast }]}>
             Life&apos;s a game
           </ThemedText>
-          <ThemedText style={styles.sub} themeColor="textSecondary">
+          <ThemedText type="subtitle" style={{ color: theme.tintContrast }}>
             Level {info.level} {info.title}
           </ThemedText>
-        </ThemedView>
+        </LinearGradient>
 
         <ThemedView style={styles.body}>
           <AnimatedRow>
             <Card style={styles.xpCard}>
               <ThemedView style={styles.xpHeader}>
-                <ThemedText type="smallBold">XP</ThemedText>
+                <ThemedText type="smallBold" themeColor="accent">
+                  XP
+                </ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
                   {state.profile.xp} / {info.next}
                 </ThemedText>
@@ -68,7 +77,9 @@ export default function HomeScreen() {
             </AnimatedRow>
             <AnimatedRow delay={120}>
               <Card style={styles.statCard}>
-                <ThemedText type="subtitle">{openQuests}</ThemedText>
+                <ThemedText type="subtitle" themeColor="gold">
+                  {openQuests}
+                </ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
                   open quests
                 </ThemedText>
@@ -119,6 +130,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.five,
     gap: Spacing.two,
+    borderRadius: Radius.lg,
+    marginTop: Spacing.three,
   },
   heroLogo: {
     marginBottom: Spacing.two,
@@ -128,12 +141,10 @@ const styles = StyleSheet.create({
     fontSize: 36,
     lineHeight: 40,
   },
-  sub: {
-    textAlign: 'center',
-  },
   body: {
     flex: 1,
     gap: Spacing.three,
+    marginTop: Spacing.three,
   },
   xpCard: {
     gap: Spacing.two,
