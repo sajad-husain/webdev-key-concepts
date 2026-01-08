@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { BottomTabInset, MaxContentWidth, Spacing, type ThemeColor } from '@/constants/theme';
 import { XP } from '@/services/gamification';
+import { tap } from '@/services/haptics';
 import { useGame } from '@/store/game-provider';
 import { useTheme } from '@/hooks/use-theme';
 import type { Goal } from '@/services/state';
@@ -48,16 +49,17 @@ function GoalCard({ goal }: { goal: Goal }) {
       <ThemedView style={styles.milestones}>
         {goal.milestones.map((milestone, index) => {
           const done = milestone.done;
-          const boxColor: ThemeColor = done ? 'success' : 'textSecondary';
+          const boxColor: ThemeColor = done ? 'success' : 'accent';
           return (
             <AnimatedRow key={milestone.id} delay={index * 60}>
               <Pressable
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: done }}
                 style={styles.milestoneRow}
-                onPress={() =>
-                  dispatch({ type: 'goals/toggleMilestone', goalId: goal.id, milestoneId: milestone.id })
-                }>
+                onPress={() => {
+                  tap();
+                  dispatch({ type: 'goals/toggleMilestone', goalId: goal.id, milestoneId: milestone.id });
+                }}>
                 <ThemedView
                   style={[styles.checkbox, { borderColor: theme[boxColor] }]}
                   type={done ? 'backgroundSelected' : undefined}>

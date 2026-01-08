@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { todayKey } from '@/services/gamification';
+import { impact, tap } from '@/services/haptics';
 import { rescheduleDaily, scheduleTestAlarm } from '@/services/notifications';
 import { useGame } from '@/store/game-provider';
 
@@ -101,6 +102,7 @@ export default function RoutinesScreen() {
               title="Test alarm"
               variant="secondary"
               onPress={() => {
+                tap();
                 void scheduleTestAlarm();
               }}
             />
@@ -145,7 +147,11 @@ export default function RoutinesScreen() {
                       style={styles.rowPressable}
                       accessibilityRole="checkbox"
                       accessibilityState={{ checked: checkedToday }}
-                      onPress={() => dispatch({ type: 'routines/toggleDay', id: item.id, date: today })}>
+                      onPress={() => {
+                        tap();
+                        impact();
+                        dispatch({ type: 'routines/toggleDay', id: item.id, date: today });
+                      }}>
                       <ThemedText
                         type="smallBold"
                         themeColor={checkedToday ? 'success' : 'text'}
@@ -153,7 +159,7 @@ export default function RoutinesScreen() {
                         {item.title}
                       </ThemedText>
                       {item.reminderTime && (
-                        <ThemedText type="small" themeColor="textSecondary">
+                        <ThemedText type="small" themeColor="accent">
                           reminders at {item.reminderTime}
                         </ThemedText>
                       )}
