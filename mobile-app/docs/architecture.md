@@ -29,6 +29,11 @@ Short tour of how the app is put together.
   `Button`, `Card`, `Input`, plus animated `ProgressBar` and `AnimatedRow`.
   Screens combine them with `ThemedText` / `ThemedView` so colors follow the
   system light/dark mode.
+- Palette keys beyond the base tokens: `tint`, `accent` (sky) and `gold` give
+  the scoreboard its color-coded accents (dashboard hero gradient, quest row
+  dots, win points, reminder chips, XP bar gradient).
+- Gradient fills use `expo-linear-gradient` (hero card, XP bar via
+  `Animated.createAnimatedComponent`).
 
 ## State (game store)
 
@@ -47,14 +52,30 @@ Short tour of how the app is put together.
   engine: `levelForXp`, `streakFor`, date-key helpers and XP constants.
 - [`src/services/state.ts`](../src/services/state.ts) — reducer + types.
 - [`src/services/notifications.ts`](../src/services/notifications.ts) —
-  `expo-notifications` wrapper: handler, permissions, Android channel and
-  `rescheduleDaily` (cancel-all + re-per-routine DAILY triggers). Web is a
-  no-op.
+  `expo-notifications` wrapper: handler (`shouldPlaySound`), permissions, a
+  HIGH-importance sound channel and `rescheduleDaily` (cancel-all +
+  re-per-routine DAILY triggers). `scheduleTestAlarm` fires a one-off test
+  notification via a TIME_INTERVAL trigger. Web is a no-op.
+- [`src/services/haptics.ts`](../src/services/haptics.ts) — `expo-haptics`
+  wrapper (`tap` / `impact`) so toggles get light feedback on device while the
+  web build stays a no-op.
 - [`src/services/storage.ts`](../src/services/storage.ts) — tiny JSON-safe
   wrapper around AsyncStorage (namespaced keys, best-effort writes).
 - [`src/services/api.ts`](../src/services/api.ts) — `fetch` wrapper with a typed
   `request<T>` helper and typed endpoints (currently a JSONPlaceholder demo, no
   longer wired to any screen).
+
+## Alarms & reminders
+
+- Daily routine reminders fire a local notification at the set `HH:MM` using a
+  DAILY trigger (SDK 57 has no `repeats` field on that trigger type). Reminders
+  are rebuilt on every change via `rescheduleDaily`.
+- Alarms are audible (`sound: 'default'`) and Android uses a HIGH-importance
+  channel; exact-time delivery lists `SCHEDULE_EXACT_ALARM` in `app.json`
+  `android.permissions` (baked at build time, not active in Expo Go).
+- While the app is foregrounded, `addNotificationReceivedListener` pops the
+  in-app alarm overlay in Routines; the "Test alarm" button fires a 5s test
+  notification.
 
 ## Animations
 
