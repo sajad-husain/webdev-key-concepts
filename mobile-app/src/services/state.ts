@@ -30,6 +30,8 @@ export type Routine = {
   title: string;
   reminderTime: string | null;
   history: string[];
+  /** Days that already earned routine-check XP, kept even if unchecked. */
+  claimed?: string[];
 };
 
 export type Win = {
@@ -85,13 +87,6 @@ function addXp(state: GameState, delta: number): GameState {
   };
 }
 
-function toggleRoutineHistory(history: string[], date: string): { history: string[]; gained: boolean } {
-  if (history.includes(date)) {
-    return { history: history.filter((d) => d !== date), gained: false };
-  }
-  return { history: [...history, date], gained: true };
-}
-
 export function reducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'HYDRATE':
@@ -108,30 +103,29 @@ export function reducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'quests/toggle': {
-      let next: GameState = state;
       const quest = state.quests.find((q) => q.id === action.id);
       if (!quest) {
         return state;
       }
-      if (quest.done) {
-        next = addXp(state, -quest.xp);
-      } else {
-        next = addXp(state, quest.xp);
-      }
+      const becomingDone = !quest.done;
+      const firstClaim = becomingDone && quest.doneAt === undefined;
+      const withXp = firstClaim ? addXp(state, quest.xp) : state;
       return {
-        ...next,
+        ...withXp,
         quests: state.quests.map((q) =>
           q.id === action.id
-            ? { ...q, done: !q.done, doneAt: q.done ? undefined : todayKey() }
+            ? {
+                ...q,
+                done: becomingDone,
+                doneAt: firstClaim ? todayKey() : q.doneAt,
+              }
             : q,
         ),
       };
     }
 
     case 'quests/remove': {
-      const quest = state.quests.find((q) => q.id === action.id);
-      const withXp = quest?.done ? addXp(state, -quest.xp) : state;
-      return { ...withXp, quests: state.quests.filter((q) => q.id !== action.id) };
+      return { ...state, quests: state.quests.filter((q) => q.id !== action.id) };
     }
 
     case 'goals/add': {
@@ -140,13 +134,7 @@ export function reducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'goals/remove': {
-      const goal = state.goals.find((g) => g.id === action.id);
-      if (!goal) {
-        return state;
-      }
-      const doneXp = goal.milestones.filter((m) => m.done).length * XP.milestone;
-      const withXp = addXp(state, -doneXp);
-      return { ...withXp, goals: state.goals.filter((g) => g.id !== action.id) };
+      return { ...state, goals: state.goals.filter((g) => g.id !== action.id) };
     }
 
     case 'goals/addMilestone': {
@@ -179,16 +167,19 @@ export function reducer(state: GameState, action: GameAction): GameState {
               return milestone;
             }
             const nowDone = !milestone.done;
-            xpDelta += nowDone ? XP.milestone : -XP.milestone;
+            const firstClaim = nowDone && milestone.doneAt === undefined;
+            if (firstClaim) {
+              xpDelta += XP.milestone;
+            }
             return {
               ...milestone,
               done: nowDone,
-              doneAt: nowDone ? todayKey() : undefined,
+              doneAt: firstClaim ? todayKey() : milestone.doneAt,
             };
           }),
         };
       });
-      return xpDelta === 0 ? state : addXp({ ...state, goals }, xpDelta);
+      return xpDelta === 0 ? { ...state, goals } : addXp({ ...state, goals }, xpDelta);
     }
 
     case 'routines/add': {
@@ -210,12 +201,34 @@ export function reducer(state: GameState, action: GameAction): GameState {
       if (!routine) {
         return state;
       }
-      const { history, gained } = toggleRoutineHistory(routine.history, action.date);
-      const withXp = gained ? addXp(state, XP.routineCheck) : state;
+      const wasChecked = routine.history.includes(action.date);
+      const claimed = routine.claimed ?? routine.history;
+
+      if (wasChecked) {
+        return {
+          ...state,
+          routines: state.routines.map((r) =>
+            r.id === action.id
+              ? { ...r, history: r.history.filter((d) => d !== action.date) }
+              : r,
+          ),
+        };
+      }
+
+      const alreadyClaimed = claimed.includes(action.date);
+      const withXp = alreadyClaimed ? state : addXp(state, XP.routineCheck);
       return {
         ...withXp,
         routines: state.routines.map((r) =>
-          r.id === action.id ? { ...r, history } : r,
+          r.id === action.id
+            ? {
+                ...r,
+                history: [...r.history, action.date],
+                claimed: alreadyClaimed
+                  ? r.claimed
+                  : [...(r.claimed ?? r.history), action.date],
+              }
+            : r,
         ),
       };
     }
@@ -232,8 +245,6 @@ export function reducer(state: GameState, action: GameAction): GameState {
 
     case 'wins/remove': {
       const day = state.wins[action.date] ?? [];
-      const win = day.find((w) => w.id === action.id);
-      const withXp = win ? addXp(state, -win.points) : state;
       const remaining = day.filter((w) => w.id !== action.id);
       const wins = { ...state.wins };
       if (remaining.length === 0) {
@@ -241,7 +252,7 @@ export function reducer(state: GameState, action: GameAction): GameState {
       } else {
         wins[action.date] = remaining;
       }
-      return { ...withXp, wins };
+      return { ...state, wins };
     }
 
     case 'settings/toggleNotifications':
@@ -255,7 +266,7 @@ export function reducer(state: GameState, action: GameAction): GameState {
   }
 }
 
-/** All days the player was active (checked any routine or logged a win). */
+/** All days the player was active (checked a routine, logged a win, or finished a quest/milestone). */
 export function getActiveDays(state: GameState): string[] {
   const days = new Set<string>();
   for (const routine of state.routines) {
@@ -266,9 +277,134 @@ export function getActiveDays(state: GameState): string[] {
   for (const day of Object.keys(state.wins)) {
     days.add(day);
   }
+  for (const quest of state.quests) {
+    if (quest.doneAt) {
+      days.add(quest.doneAt);
+    }
+  }
+  for (const goal of state.goals) {
+    for (const milestone of goal.milestones) {
+      if (milestone.doneAt) {
+        days.add(milestone.doneAt);
+      }
+    }
+  }
   return [...days];
 }
 
 export function getStreak(state: GameState): number {
   return streakFor(getActiveDays(state), todayKey());
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
+}
+
+function toFiniteNumber(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+}
+
+function toPoints(value: unknown): { id: string; note: string; points: number } | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const id = typeof value.id === 'string' ? value.id : '';
+  const note = typeof value.note === 'string' ? value.note : '';
+  const points = toFiniteNumber(value.points);
+  return id ? { id, note, points } : null;
+}
+
+function toRoutine(value: unknown): Routine | null {
+  if (!isRecord(value) || typeof value.id !== 'string' || typeof value.title !== 'string') {
+    return null;
+  }
+  const history = asStringArray(value.history);
+  const storedClaimed = Array.isArray(value.claimed) ? asStringArray(value.claimed) : [];
+  // A legacy routine has history but no claimed list — those days already
+  // earned XP, so merge them in to keep the farm fix airtight.
+  const claimed = [...new Set([...history, ...storedClaimed])];
+  const reminderTime =
+    value.reminderTime === null || typeof value.reminderTime === 'string'
+      ? (value.reminderTime as string | null)
+      : null;
+  return { id: value.id, title: value.title, reminderTime, history, claimed };
+}
+
+function toMilestone(value: unknown): Milestone | null {
+  if (!isRecord(value) || typeof value.id !== 'string' || typeof value.title !== 'string') {
+    return null;
+  }
+  return {
+    id: value.id,
+    title: value.title,
+    done: value.done === true,
+    doneAt: typeof value.doneAt === 'string' ? value.doneAt : undefined,
+  };
+}
+
+function toQuest(value: unknown): Quest | null {
+  if (!isRecord(value) || typeof value.id !== 'string' || typeof value.title !== 'string') {
+    return null;
+  }
+  return {
+    id: value.id,
+    title: value.title,
+    xp: toFiniteNumber(value.xp),
+    done: value.done === true,
+    doneAt: typeof value.doneAt === 'string' ? value.doneAt : undefined,
+  };
+}
+
+function toGoal(value: unknown): Goal | null {
+  if (!isRecord(value) || typeof value.id !== 'string' || typeof value.title !== 'string') {
+    return null;
+  }
+  const milestones = Array.isArray(value.milestones)
+    ? value.milestones.map(toMilestone).filter((m): m is Milestone => m !== null)
+    : [];
+  return { id: value.id, title: value.title, milestones };
+}
+
+/**
+ * Guards whatever was read from storage so a corrupt or old value can never
+ * crash the app or wipe a slice back to a nil shape. Missing fields fall back
+ * to the initial state defaults.
+ */
+export function sanitizeState(input: unknown): GameState {
+  const base = createInitialState();
+  if (!isRecord(input)) {
+    return base;
+  }
+  const quests = Array.isArray(input.quests)
+    ? input.quests.map(toQuest).filter((q): q is Quest => q !== null)
+    : base.quests;
+  const goals = Array.isArray(input.goals)
+    ? input.goals.map(toGoal).filter((g): g is Goal => g !== null)
+    : base.goals;
+  const routines = Array.isArray(input.routines)
+    ? input.routines.map(toRoutine).filter((r): r is Routine => r !== null)
+    : base.routines;
+  const wins = isRecord(input.wins)
+    ? Object.fromEntries(
+        Object.entries(input.wins).map(([key, list]) => [key, toWins(list)]),
+      )
+    : base.wins;
+  return {
+    profile: isRecord(input.profile) ? { xp: toFiniteNumber(input.profile.xp) } : base.profile,
+    quests,
+    goals,
+    routines,
+    wins,
+    settings: isRecord(input.settings)
+      ? { notifications: input.settings.notifications !== false }
+      : base.settings,
+  };
+}
+
+function toWins(list: unknown): Win[] {
+  return Array.isArray(list) ? list.map(toPoints).filter((w): w is Win => w !== null) : [];
 }
