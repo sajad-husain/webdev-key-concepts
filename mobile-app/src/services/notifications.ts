@@ -81,24 +81,24 @@ export async function scheduleTestAlarm(): Promise<void> {
 /**
  * Rebuilds the daily reminder schedule for all routines. Cancels everything
  * first so removed reminders don't linger, and skips work on web or without
- * permission.
+ * permission. Returns whether the schedule is actually active.
  */
 export async function rescheduleDaily(
   routines: Routine[],
   enabled: boolean,
-): Promise<void> {
+): Promise<boolean> {
   if (!supported()) {
-    return;
+    return false;
   }
   await ensureChannel();
   const granted = await ensurePermissions();
   if (!granted) {
-    return;
+    return false;
   }
 
   await Notifications.cancelAllScheduledNotificationsAsync();
   if (!enabled) {
-    return;
+    return true;
   }
 
   for (const routine of routines) {
@@ -123,4 +123,5 @@ export async function rescheduleDaily(
       },
     });
   }
+  return true;
 }

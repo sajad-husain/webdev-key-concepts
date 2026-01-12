@@ -13,7 +13,7 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { todayKey } from '@/services/gamification';
 import { impact, tap } from '@/services/haptics';
-import { rescheduleDaily, scheduleTestAlarm } from '@/services/notifications';
+import { ensurePermissions, rescheduleDaily, scheduleTestAlarm } from '@/services/notifications';
 import { useGame } from '@/store/game-provider';
 
 const TIME_PATTERN = /^([01]?\d|2[0-3]):[0-5]\d$/;
@@ -23,6 +23,8 @@ export default function RoutinesScreen() {
   const theme = useTheme();
   const [title, setTitle] = useState('');
   const [reminder, setReminder] = useState('');
+  const [timeError, setTimeError] = useState<string | null>(null);
+  const [permissionHint, setPermissionHint] = useState<string | null>(null);
   const [alarmTitle, setAlarmTitle] = useState<string | null>(null);
   const today = todayKey();
 
@@ -30,7 +32,17 @@ export default function RoutinesScreen() {
     if (!hydrated) {
       return;
     }
-    void rescheduleDaily(state.routines, state.settings.notifications);
+    void rescheduleDaily(state.routines, state.settings.notifications).then((granted) => {
+      if (Platform.OS === 'web') {
+        setPermissionHint(null);
+        return;
+      }
+      setPermissionHint(
+        state.settings.notifications && !granted
+          ? 'Reminders are on but notifications are blocked — allow them in system settings.'
+          : null,
+      );
+    });
   }, [state.routines, state.settings.notifications, hydrated]);
 
   useEffect(() => {
@@ -43,14 +55,33 @@ export default function RoutinesScreen() {
     return () => subscription.remove();
   }, []);
 
+  const onToggleNotifications = async () => {
+    if (state.settings.notifications) {
+      dispatch({ type: 'settings/toggleNotifications' });
+      return;
+    }
+    tap();
+    const granted = await ensurePermissions();
+    setPermissionHint(
+      granted ? null : 'Notifications are blocked — allow them in system settings.',
+    );
+    if (granted) {
+      dispatch({ type: 'settings/toggleNotifications' });
+    }
+  };
+
   const addRoutine = () => {
     const trimmed = title.trim();
     if (!trimmed) {
       return;
     }
-    const reminderTime = reminder.trim();
-    const validTime = TIME_PATTERN.test(reminderTime) ? reminderTime : null;
-    dispatch({ type: 'routines/add', title: trimmed, reminderTime: validTime });
+    const rawTime = reminder.trim();
+    if (rawTime && !TIME_PATTERN.test(rawTime)) {
+      setTimeError('Use HH:MM, e.g. 07:30');
+      return;
+    }
+    dispatch({ type: 'routines/add', title: trimmed, reminderTime: rawTime ? rawTime : null });
+    setTimeError(null);
     setTitle('');
     setReminder('');
   };
@@ -84,16 +115,25 @@ export default function RoutinesScreen() {
           </ThemedView>
 
           {Platform.OS !== 'web' && (
-            <ThemedView style={styles.reminderRow}>
-              <ThemedText type="smallBold" style={styles.reminderLabel}>
-                Daily reminders
-              </ThemedText>
-              <Switch
-                value={state.settings.notifications}
-                onValueChange={() => dispatch({ type: 'settings/toggleNotifications' })}
-                trackColor={{ true: theme.tint, false: theme.backgroundSelected }}
-                thumbColor={theme.background}
-              />
+            <ThemedView style={styles.reminderSection}>
+              <ThemedView style={styles.reminderRow}>
+                <ThemedText type="smallBold" style={styles.reminderLabel}>
+                  Daily reminders
+                </ThemedText>
+                <Switch
+                  value={state.settings.notifications}
+                  onValueChange={() => {
+                    void onToggleNotifications();
+                  }}
+                  trackColor={{ true: theme.tint, false: theme.backgroundSelected }}
+                  thumbColor={theme.background}
+                />
+              </ThemedView>
+              {permissionHint && (
+                <ThemedText type="small" themeColor="danger" style={styles.reminderHint}>
+                  {permissionHint}
+                </ThemedText>
+              )}
             </ThemedView>
           )}
 
@@ -120,13 +160,23 @@ export default function RoutinesScreen() {
             <Input
               placeholder="Reminder time (HH:MM, optional)"
               value={reminder}
-              onChangeText={setReminder}
+              onChangeText={(text) => {
+                setReminder(text);
+                if (timeError) {
+                  setTimeError(null);
+                }
+              }}
               onSubmitEditing={addRoutine}
               returnKeyType="done"
               style={styles.titleInput}
             />
             <Button title="Add" onPress={addRoutine} />
           </ThemedView>
+          {timeError && (
+            <ThemedText type="small" themeColor="danger" style={styles.reminderHint}>
+              {timeError}
+            </ThemedText>
+          )}
 
           <FlatList
             data={state.routines}
@@ -203,13 +253,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.two,
     gap: Spacing.one,
   },
+  reminderSection: {
+    paddingHorizontal: Spacing.two,
+    gap: Spacing.one,
+  },
   reminderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.two,
   },
   reminderLabel: {
     marginRight: 'auto',
+  },
+  reminderHint: {
+    paddingHorizontal: Spacing.two,
   },
   alarmOverlay: {
     position: 'absolute',
