@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,22 +28,43 @@ export default function RoutinesScreen() {
   const [alarmTitle, setAlarmTitle] = useState<string | null>(null);
   const today = todayKey();
 
+  // Latest state without making the schedule effect re-run on every change.
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  // Only rebuild reminders when the *schedule* (enabled flag + routine
+  // ids/times) actually changes — checking a routine off must not churn
+  // the whole notification queue.
+  const scheduleSignature = useMemo(() => {
+    if (!state.settings.notifications) {
+      return 'off';
+    }
+    return state.routines
+      .filter((routine) => routine.reminderTime)
+      .map((routine) => `${routine.id}:${routine.reminderTime}`)
+      .sort()
+      .join('|');
+  }, [state.routines, state.settings.notifications]);
+
   useEffect(() => {
     if (!hydrated) {
       return;
     }
-    void rescheduleDaily(state.routines, state.settings.notifications).then((granted) => {
+    const { routines, settings } = stateRef.current;
+    void rescheduleDaily(routines, settings.notifications).then((granted) => {
       if (Platform.OS === 'web') {
         setPermissionHint(null);
         return;
       }
       setPermissionHint(
-        state.settings.notifications && !granted
+        settings.notifications && !granted
           ? 'Reminders are on but notifications are blocked — allow them in system settings.'
           : null,
       );
     });
-  }, [state.routines, state.settings.notifications, hydrated]);
+  }, [scheduleSignature, hydrated]);
 
   useEffect(() => {
     if (Platform.OS === 'web') {

@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import type { Routine } from '@/services/state';
 
 export const REMINDER_ID_PREFIX = 'routine-';
+const TEST_ALARM_ID = 'alarm-test';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -66,6 +67,9 @@ export async function scheduleTestAlarm(): Promise<void> {
     return;
   }
   await Notifications.scheduleNotificationAsync({
+    // A fixed identifier makes a re-press replace the pending test instead
+    // of stacking another one.
+    identifier: TEST_ALARM_ID,
     content: {
       title: 'Alarm test',
       body: 'This is how your daily reminder will sound.',
