@@ -90,7 +90,9 @@ function addXp(state: GameState, delta: number): GameState {
 export function reducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'HYDRATE':
-      return action.state;
+      // Sanitize on the way in so a corrupt or stale persisted slice can
+      // never crash a screen or blow away defaults with a nil shape.
+      return sanitizeState(action.state);
 
     case 'quests/add': {
       const quest: Quest = {
