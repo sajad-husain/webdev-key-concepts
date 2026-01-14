@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { todayKey } from '@/services/gamification';
-import { impact, tap } from '@/services/haptics';
+import { impact } from '@/services/haptics';
 import { useGame } from '@/store/game-provider';
 
 const WIN_POINTS = [5, 10, 15] as const;
@@ -23,7 +23,6 @@ export default function WinsScreen() {
   const todayPoints = wins.reduce((sum, win) => sum + win.points, 0);
 
   const addWin = (points: (typeof WIN_POINTS)[number]) => {
-    tap();
     impact();
     dispatch({
       type: 'wins/add',

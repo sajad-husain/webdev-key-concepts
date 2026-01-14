@@ -219,7 +219,6 @@ export default function RoutinesScreen() {
                       accessibilityRole="checkbox"
                       accessibilityState={{ checked: checkedToday }}
                       onPress={() => {
-                        tap();
                         impact();
                         dispatch({ type: 'routines/toggleDay', id: item.id, date: today });
                       }}>
