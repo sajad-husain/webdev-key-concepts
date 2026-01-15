@@ -37,7 +37,7 @@ knowledge from older SDKs.
 ```
 mobile-app/
 ├── src/
-│   ├── app/            # routes/screens (index, settings, list, about, _layout)
+│   ├── app/            # routes/screens (index, list, goals, routines, settings, guide)
 │   ├── components/     # ThemedText/ThemedView + ui/ (Button, Card, Input)
 │   ├── constants/      # theme.ts — Colors, Spacing, Radius, Fonts
 │   ├── hooks/          # use-theme, use-color-scheme

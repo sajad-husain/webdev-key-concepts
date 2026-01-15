@@ -70,7 +70,8 @@ mobile-app/
 │   │   ├── list.tsx    # Quests tab (short-term goals)
 │   │   ├── goals.tsx   # Goals tab (milestones + progress bar)
 │   │   ├── routines.tsx# Routines tab (daily habits + reminders)
-│   │   └── settings.tsx# Wins tab (daily wins log)
+│   │   ├── settings.tsx# Wins tab (daily wins log)
+│   │   └── guide.tsx   # Guide tab (how-to-play + XP table)
 │   ├── components/     # ThemedText/ThemedView, app tabs, ui/ (Button, Card, Input, ProgressBar…)
 │   ├── constants/      # theme tokens (Colors, Spacing, Radius, Fonts)
 │   ├── hooks/          # color scheme + theme hooks

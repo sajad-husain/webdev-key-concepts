@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -133,6 +134,14 @@ export default function RoutinesScreen() {
             <ThemedText themeColor="textSecondary">
               Daily habits. Check them off, keep your streak alive.
             </ThemedText>
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => router.navigate('/guide')}
+              style={({ pressed }) => pressed && styles.pressedLink}>
+              <ThemedText type="link" themeColor="tint">
+                How to play — turn tasks into XP
+              </ThemedText>
+            </Pressable>
           </ThemedView>
 
           {Platform.OS !== 'web' && (
@@ -272,6 +281,9 @@ const styles = StyleSheet.create({
   headerSection: {
     paddingHorizontal: Spacing.two,
     gap: Spacing.one,
+  },
+  pressedLink: {
+    opacity: 0.7,
   },
   reminderSection: {
     paddingHorizontal: Spacing.two,

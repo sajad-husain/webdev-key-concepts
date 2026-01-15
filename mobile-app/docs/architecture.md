@@ -19,6 +19,7 @@ Short tour of how the app is put together.
 | `goals`    | Goals    | Long-term goals with milestone progress bars |
 | `routines` | Routines | Daily habits + local reminder notifications  |
 | `settings` | Wins     | Daily wins log (+5/+10/+15 XP)               |
+| `guide`    | Guide    | How-to-play: XP loop, habit + streak tips    |
 
 ## Theming
 

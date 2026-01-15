@@ -17,7 +17,7 @@ import { getStreak } from '@/services/state';
 import { useGame } from '@/store/game-provider';
 
 export default function HomeScreen() {
-  const { state } = useGame();
+  const { state, dispatch, hydrated } = useGame();
   const theme = useTheme();
   const info = levelForXp(state.profile.xp);
   const streak = getStreak(state);
@@ -47,6 +47,33 @@ export default function HomeScreen() {
         </LinearGradient>
 
         <ThemedView style={styles.body}>
+          {!state.settings.seenGuide && hydrated && (
+            <AnimatedRow>
+              <Card style={styles.onboardingCard}>
+                <ThemedText type="smallBold">New here?</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Learn the loop: earn XP, keep the streak and turn any task into a quest.
+                </ThemedText>
+                <ThemedView style={styles.onboardingActions}>
+                  <Button
+                    title="How to play"
+                    style={styles.onboardingPrimary}
+                    onPress={() => {
+                      dispatch({ type: 'settings/markGuideSeen' });
+                      router.navigate('/guide');
+                    }}
+                  />
+                  <Button
+                    title="Not now"
+                    variant="ghost"
+                    style={styles.onboardingGhost}
+                    onPress={() => dispatch({ type: 'settings/markGuideSeen' })}
+                  />
+                </ThemedView>
+              </Card>
+            </AnimatedRow>
+          )}
+
           <AnimatedRow>
             <Card style={styles.xpCard}>
               <ThemedView style={styles.xpHeader}>
@@ -148,6 +175,19 @@ const styles = StyleSheet.create({
   },
   xpCard: {
     gap: Spacing.two,
+  },
+  onboardingCard: {
+    gap: Spacing.two,
+  },
+  onboardingActions: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  onboardingPrimary: {
+    flex: 1,
+  },
+  onboardingGhost: {
+    flex: 1,
   },
   xpHeader: {
     flexDirection: 'row',

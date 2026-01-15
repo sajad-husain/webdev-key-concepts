@@ -36,6 +36,9 @@ export default function AppTabs() {
           <TabTrigger name="wins" href="/settings" asChild>
             <TabButton>Wins</TabButton>
           </TabTrigger>
+          <TabTrigger name="guide" href="/guide" asChild>
+            <TabButton>Guide</TabButton>
+          </TabTrigger>
         </CustomTabList>
       </TabList>
     </Tabs>
