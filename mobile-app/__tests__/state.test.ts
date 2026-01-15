@@ -208,3 +208,32 @@ describe('sanitizeState', () => {
     expect(state.routines[0].claimed).toEqual(['2026-01-11']);
   });
 });
+
+describe('guide onboarding flag', () => {
+  it('defaults to not seen', () => {
+    expect(createInitialState().settings.seenGuide).toBe(false);
+  });
+
+  it('marks the guide as seen once, idempotently', () => {
+    let state = build();
+    state = reducer(state, { type: 'settings/markGuideSeen' });
+    expect(state.settings.seenGuide).toBe(true);
+
+    state = reducer(state, { type: 'settings/markGuideSeen' });
+    expect(state.settings.seenGuide).toBe(true);
+  });
+
+  it('does not reset the flag when toggling notifications', () => {
+    let state = build({ settings: { notifications: false, seenGuide: true } });
+    state = reducer(state, { type: 'settings/toggleNotifications' });
+    expect(state.settings.notifications).toBe(true);
+    expect(state.settings.seenGuide).toBe(true);
+  });
+
+  it('coerces malformed seenGuide to false on hydrate', () => {
+    expect(sanitizeState({ settings: { seenGuide: 'yes' } }).settings.seenGuide).toBe(false);
+    expect(sanitizeState({ settings: { seenGuide: 1 } }).settings.seenGuide).toBe(false);
+    expect(sanitizeState({ settings: { seenGuide: true } }).settings.seenGuide).toBe(true);
+    expect(sanitizeState({ settings: null }).settings.seenGuide).toBe(false);
+  });
+});

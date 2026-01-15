@@ -42,6 +42,8 @@ export type Win = {
 
 export type Settings = {
   notifications: boolean;
+  /** Whether the "how to play" onboarding card has been dismissed/opened. */
+  seenGuide: boolean;
 };
 
 export type GameState = {
@@ -67,7 +69,8 @@ export type GameAction =
   | { type: 'routines/toggleDay'; id: string; date: string }
   | { type: 'wins/add'; date: string; note: string; points: number }
   | { type: 'wins/remove'; date: string; id: string }
-  | { type: 'settings/toggleNotifications' };
+  | { type: 'settings/toggleNotifications' }
+  | { type: 'settings/markGuideSeen' };
 
 export function createInitialState(): GameState {
   return {
@@ -76,7 +79,7 @@ export function createInitialState(): GameState {
     goals: [],
     routines: [],
     wins: {},
-    settings: { notifications: true },
+    settings: { notifications: true, seenGuide: false },
   };
 }
 
@@ -263,6 +266,12 @@ export function reducer(state: GameState, action: GameAction): GameState {
         settings: { ...state.settings, notifications: !state.settings.notifications },
       };
 
+    case 'settings/markGuideSeen':
+      if (state.settings.seenGuide) {
+        return state;
+      }
+      return { ...state, settings: { ...state.settings, seenGuide: true } };
+
     default:
       return state;
   }
@@ -402,7 +411,10 @@ export function sanitizeState(input: unknown): GameState {
     routines,
     wins,
     settings: isRecord(input.settings)
-      ? { notifications: input.settings.notifications !== false }
+      ? {
+          notifications: input.settings.notifications !== false,
+          seenGuide: input.settings.seenGuide === true,
+        }
       : base.settings,
   };
 }
