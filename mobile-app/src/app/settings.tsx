@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as DocumentPicker from 'expo-document-picker';
-import { FlatList, Share, StyleSheet } from 'react-native';
+import { Alert, FlatList, Share, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { todayKey } from '@/services/gamification';
 import { impact } from '@/services/haptics';
-import { deserializeState, serializeState } from '@/services/state';
+import { deserializeState, serializeState, createInitialState } from '@/services/state';
+import { clearAll } from '@/services/storage';
 import { useGame } from '@/store/game-provider';
 
 const WIN_POINTS = [5, 10, 15] as const;
@@ -67,6 +68,25 @@ export default function WinsScreen() {
     } catch {
       // Import failed or cancelled
     }
+  };
+
+  const handleReset = async () => {
+    impact();
+    const confirmed = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        'Reset game?',
+        'This will permanently delete all your progress, routines, quests, goals, and wins.',
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Reset', style: 'destructive', onPress: () => resolve(true) },
+        ],
+      );
+    });
+    if (!confirmed) {
+      return;
+    }
+    await clearAll();
+    dispatch({ type: 'HYDRATE', state: createInitialState() });
   };
 
   return (
@@ -139,6 +159,7 @@ export default function WinsScreen() {
             <Button title="Export data" variant="secondary" onPress={handleExport} />
             <Button title="Import data" variant="secondary" onPress={handleImport} />
           </ThemedView>
+          <Button title="Reset game" variant="ghost" onPress={handleReset} />
         </Card>
       </SafeAreaView>
     </ThemedView>

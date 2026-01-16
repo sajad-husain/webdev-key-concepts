@@ -26,3 +26,13 @@ export async function removeItem(key: string): Promise<void> {
     // Best effort.
   }
 }
+
+export async function clearAll(): Promise<void> {
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    const prefixedKeys = keys.filter((k) => k.startsWith(KEY_PREFIX));
+    await AsyncStorage.multiRemove(prefixedKeys);
+  } catch {
+    // Best effort.
+  }
+}
