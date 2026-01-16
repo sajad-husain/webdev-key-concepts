@@ -422,3 +422,33 @@ export function sanitizeState(input: unknown): GameState {
 function toWins(list: unknown): Win[] {
   return Array.isArray(list) ? list.map(toPoints).filter((w): w is Win => w !== null) : [];
 }
+
+export const GAME_STATE_VERSION = 1 as const;
+
+export type SerializedGameState = {
+  version: typeof GAME_STATE_VERSION;
+  exportedAt: string;
+  state: GameState;
+};
+
+export function serializeState(state: GameState): SerializedGameState {
+  return {
+    version: GAME_STATE_VERSION,
+    exportedAt: new Date().toISOString(),
+    state,
+  };
+}
+
+export function deserializeState(input: unknown): GameState {
+  if (!isRecord(input)) {
+    return createInitialState();
+  }
+  const version = typeof input.version === 'number' ? input.version : 0;
+  if (version !== GAME_STATE_VERSION) {
+    return createInitialState();
+  }
+  if (!isRecord(input.state)) {
+    return createInitialState();
+  }
+  return sanitizeState(input.state);
+}

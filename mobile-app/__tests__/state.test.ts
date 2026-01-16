@@ -2,9 +2,11 @@ import { describe, expect, it } from '@jest/globals';
 
 import {
   createInitialState,
+  deserializeState,
   getActiveDays,
   reducer,
   sanitizeState,
+  serializeState,
   type GameState,
 } from '@/services/state';
 import { XP } from '@/services/gamification';
@@ -235,5 +237,66 @@ describe('guide onboarding flag', () => {
     expect(sanitizeState({ settings: { seenGuide: 1 } }).settings.seenGuide).toBe(false);
     expect(sanitizeState({ settings: { seenGuide: true } }).settings.seenGuide).toBe(true);
     expect(sanitizeState({ settings: null }).settings.seenGuide).toBe(false);
+  });
+});
+
+describe('serialize/deserialize round-trip', () => {
+  it('serializes a full state and deserializes back identically', () => {
+    const original = build({
+      profile: { xp: 123 },
+      quests: [{ id: 'q1', title: 'Read', xp: 20, done: true, doneAt: '2026-01-10' }],
+      goals: [
+        {
+          id: 'g1',
+          title: 'Ship',
+          milestones: [{ id: 'm1', title: 'Plan', done: true, doneAt: '2026-01-11' }],
+        },
+      ],
+      routines: [
+        { id: 'r1', title: 'Run', reminderTime: '07:00', history: ['2026-01-12'], claimed: ['2026-01-12'] },
+      ],
+      wins: { '2026-01-12': [{ id: 'w1', note: 'Win', points: 10 }] },
+      settings: { notifications: false, seenGuide: true },
+    });
+
+    const serialized = serializeState(original);
+    expect(serialized.version).toBe(1);
+    expect(serialized.exportedAt).toBeDefined();
+    expect(serialized.state).toEqual(original);
+
+    const restored = deserializeState(serialized);
+    expect(restored).toEqual(original);
+  });
+
+  it('rejects wrong version and returns initial state', () => {
+    const serialized = serializeState(build({ profile: { xp: 99 } }));
+    const tampered = { ...serialized, version: 999 };
+    expect(deserializeState(tampered)).toEqual(createInitialState());
+  });
+
+  it('rejects malformed input and returns initial state', () => {
+    expect(deserializeState(null)).toEqual(createInitialState());
+    expect(deserializeState({ version: 1, state: 'not-an-object' })).toEqual(createInitialState());
+    expect(deserializeState({ version: 1 })).toEqual(createInitialState());
+    expect(deserializeState({ state: {} })).toEqual(createInitialState());
+  });
+
+  it('sanitizes deserialized state (coerces bad shapes)', () => {
+    const bad = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      state: {
+        profile: { xp: 'lots' },
+        quests: [{ id: 'q1', title: 'Read', xp: 20, done: true }, { id: 42 }],
+        wins: null,
+        settings: { notifications: 'yes', seenGuide: 'nope' },
+      },
+    };
+    const restored = deserializeState(bad);
+    expect(restored.profile.xp).toBe(0);
+    expect(restored.quests).toHaveLength(1);
+    expect(restored.wins).toEqual({});
+    expect(restored.settings.notifications).toBe(true);
+    expect(restored.settings.seenGuide).toBe(false);
   });
 });
