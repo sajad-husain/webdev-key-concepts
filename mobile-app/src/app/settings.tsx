@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import * as DocumentPicker from 'expo-document-picker';
 import { FlatList, Share, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { todayKey } from '@/services/gamification';
 import { impact } from '@/services/haptics';
-import { serializeState } from '@/services/state';
+import { deserializeState, serializeState } from '@/services/state';
 import { useGame } from '@/store/game-provider';
 
 const WIN_POINTS = [5, 10, 15] as const;
@@ -46,6 +47,25 @@ export default function WinsScreen() {
       });
     } catch {
       // Share cancelled or unavailable
+    }
+  };
+
+  const handleImport = async () => {
+    impact();
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/json',
+        copyToCacheDirectory: true,
+      });
+      if (result.canceled || !result.assets?.[0]?.uri) {
+        return;
+      }
+      const response = await fetch(result.assets[0].uri);
+      const json = await response.json();
+      const restored = deserializeState(json);
+      dispatch({ type: 'HYDRATE', state: restored });
+    } catch {
+      // Import failed or cancelled
     }
   };
 
@@ -115,7 +135,10 @@ export default function WinsScreen() {
           <ThemedText type="small" themeColor="textSecondary">
             Backup or restore your progress.
           </ThemedText>
-          <Button title="Export data" variant="secondary" onPress={handleExport} />
+          <ThemedView style={styles.dataActions}>
+            <Button title="Export data" variant="secondary" onPress={handleExport} />
+            <Button title="Import data" variant="secondary" onPress={handleImport} />
+          </ThemedView>
         </Card>
       </SafeAreaView>
     </ThemedView>
@@ -174,6 +197,10 @@ const styles = StyleSheet.create({
     marginTop: Spacing.five,
   },
   dataSection: {
+    gap: Spacing.two,
+  },
+  dataActions: {
+    flexDirection: 'row',
     gap: Spacing.two,
   },
 });
