@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FlatList, StyleSheet } from 'react-native';
+import { FlatList, Share, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { todayKey } from '@/services/gamification';
 import { impact } from '@/services/haptics';
+import { serializeState } from '@/services/state';
 import { useGame } from '@/store/game-provider';
 
 const WIN_POINTS = [5, 10, 15] as const;
@@ -31,6 +32,21 @@ export default function WinsScreen() {
       points,
     });
     setNote('');
+  };
+
+  const handleExport = async () => {
+    impact();
+    const serialized = serializeState(state);
+    const json = JSON.stringify(serialized, null, 2);
+    try {
+      await Share.share({
+        title: 'Life\'s a game — Backup',
+        message: 'Game data backup',
+        url: `data:application/json;base64,${btoa(json)}`,
+      });
+    } catch {
+      // Share cancelled or unavailable
+    }
   };
 
   return (
@@ -93,6 +109,14 @@ export default function WinsScreen() {
             </AnimatedRow>
           )}
         />
+
+        <Card style={styles.dataSection}>
+          <ThemedText type="smallBold">Data</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            Backup or restore your progress.
+          </ThemedText>
+          <Button title="Export data" variant="secondary" onPress={handleExport} />
+        </Card>
       </SafeAreaView>
     </ThemedView>
   );
@@ -148,5 +172,8 @@ const styles = StyleSheet.create({
   empty: {
     textAlign: 'center',
     marginTop: Spacing.five,
+  },
+  dataSection: {
+    gap: Spacing.two,
   },
 });
