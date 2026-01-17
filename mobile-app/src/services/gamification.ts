@@ -85,3 +85,8 @@ export function streakFor(activeDays: string[], today: string): number {
 export function uid(prefix = 'id'): string {
   return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
+
+/** Returns true if the new XP crosses a level threshold that the old XP did not. */
+export function isLevelUp(oldXp: number, newXp: number): boolean {
+  return levelForXp(newXp).level > levelForXp(oldXp).level;
+}

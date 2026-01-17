@@ -2,6 +2,7 @@ import { describe, expect, it } from '@jest/globals';
 
 import {
   addDaysKey,
+  isLevelUp,
   levelForXp,
   streakFor,
   todayKey,
@@ -77,5 +78,24 @@ describe('streakFor', () => {
     // 11-28 is missing, so counting from yesterday must still reset.
     const days = ['2025-11-27', '2025-11-29'];
     expect(streakFor(days, '2025-11-29')).toBe(1);
+  });
+});
+
+describe('isLevelUp', () => {
+  it('returns true when crossing a level boundary', () => {
+    expect(isLevelUp(99, 100)).toBe(true); // level 1 -> 2
+    expect(isLevelUp(299, 300)).toBe(true); // level 2 -> 3
+    expect(isLevelUp(599, 600)).toBe(true); // level 3 -> 4
+  });
+
+  it('returns false when staying within the same level', () => {
+    expect(isLevelUp(0, 50)).toBe(false);
+    expect(isLevelUp(100, 150)).toBe(false);
+    expect(isLevelUp(250, 299)).toBe(false);
+  });
+
+  it('returns false when XP decreases or stays same', () => {
+    expect(isLevelUp(100, 99)).toBe(false);
+    expect(isLevelUp(150, 150)).toBe(false);
   });
 });
