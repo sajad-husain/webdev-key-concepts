@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -17,13 +18,23 @@ import { impact, tap } from '@/services/haptics';
 import { ensurePermissions, rescheduleDaily, scheduleTestAlarm } from '@/services/notifications';
 import { useGame } from '@/store/game-provider';
 
-const TIME_PATTERN = /^([01]?\d|2[0-3]):[0-5]\d$/;
+function formatTimeForPicker(date: Date): string {
+  return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+}
+
+function parseTimeString(time: string): Date {
+  const [hours, minutes] = time.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+}
 
 export default function RoutinesScreen() {
   const { state, dispatch, hydrated } = useGame();
   const theme = useTheme();
   const [title, setTitle] = useState('');
   const [reminder, setReminder] = useState('');
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [timeError, setTimeError] = useState<string | null>(null);
   const [permissionHint, setPermissionHint] = useState<string | null>(null);
   const [alarmTitle, setAlarmTitle] = useState<string | null>(null);
@@ -97,15 +108,21 @@ export default function RoutinesScreen() {
     if (!trimmed) {
       return;
     }
-    const rawTime = reminder.trim();
-    if (rawTime && !TIME_PATTERN.test(rawTime)) {
-      setTimeError('Use HH:MM, e.g. 07:30');
-      return;
-    }
-    dispatch({ type: 'routines/add', title: trimmed, reminderTime: rawTime ? rawTime : null });
-    setTimeError(null);
+    dispatch({ type: 'routines/add', title: trimmed, reminderTime: reminder ? reminder : null });
     setTitle('');
     setReminder('');
+    setShowTimePicker(false);
+  };
+
+  const handleTimeChange = (_event: unknown, selectedDate?: Date) => {
+    if (selectedDate) {
+      setReminder(formatTimeForPicker(selectedDate));
+    }
+    setShowTimePicker(false);
+  };
+
+  const openTimePicker = () => {
+    setShowTimePicker(true);
   };
 
   return (
@@ -186,20 +203,36 @@ export default function RoutinesScreen() {
               style={styles.titleInput}
             />
           </ThemedView>
-          <ThemedView style={styles.composer}>
-            <Input
-              placeholder="Reminder time (HH:MM, optional)"
-              value={reminder}
-              onChangeText={(text) => {
-                setReminder(text);
-                if (timeError) {
-                  setTimeError(null);
-                }
-              }}
-              onSubmitEditing={addRoutine}
-              returnKeyType="done"
-              style={styles.titleInput}
+          {Platform.OS !== 'web' && showTimePicker && (
+            <DateTimePicker
+              mode="time"
+              value={reminder ? parseTimeString(reminder) : new Date()}
+              is24Hour={true}
+              onChange={handleTimeChange}
             />
+          )}
+          <ThemedView style={styles.composer}>
+            {Platform.OS !== 'web' ? (
+              <Pressable onPress={openTimePicker} style={styles.timePickerButton}>
+                <ThemedText type="small" themeColor={reminder ? 'accent' : 'textSecondary'}>
+                  {reminder ? `Reminder: ${reminder}` : 'Set reminder time (optional)'}
+                </ThemedText>
+              </Pressable>
+            ) : (
+              <Input
+                placeholder="Reminder time (HH:MM, optional)"
+                value={reminder}
+                onChangeText={(text) => {
+                  setReminder(text);
+                  if (timeError) {
+                    setTimeError(null);
+                  }
+                }}
+                onSubmitEditing={addRoutine}
+                returnKeyType="done"
+                style={styles.titleInput}
+              />
+            )}
             <Button title="Add" onPress={addRoutine} />
           </ThemedView>
           {timeError && (
@@ -314,6 +347,15 @@ const styles = StyleSheet.create({
   composer: {
     flexDirection: 'row',
     gap: Spacing.two,
+  },
+  timePickerButton: {
+    flex: 1,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Spacing.three,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   titleInput: {
     flex: 1,
