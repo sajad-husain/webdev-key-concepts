@@ -7,9 +7,27 @@ import { Platform, useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
-import { GameProvider } from '@/store/game-provider';
+import { LevelUpBanner } from '@/components/ui/level-up-banner';
+import { GameProvider, useGame } from '@/store/game-provider';
 
 SplashScreen.preventAutoHideAsync();
+
+function AppContent() {
+  const { levelUpBanner } = useGame();
+
+  return (
+    <>
+      <AppTabs />
+      <LevelUpBanner
+        visible={levelUpBanner.visible}
+        onDismiss={levelUpBanner.dismiss}
+        level={levelUpBanner.level}
+        title={levelUpBanner.title}
+        xpGained={levelUpBanner.xpGained}
+      />
+    </>
+  );
+}
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -39,7 +57,7 @@ export default function TabLayout() {
       <StatusBar style="auto" />
       <GameProvider>
         <AnimatedSplashOverlay />
-        <AppTabs />
+        <AppContent />
       </GameProvider>
     </ThemeProvider>
   );
