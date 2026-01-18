@@ -13,6 +13,7 @@ import { ProgressBar } from '@/components/ui/progress-bar';
 import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { levelForXp, todayKey, weekDaysFor } from '@/services/gamification';
+import { impact } from '@/services/haptics';
 import { getActiveDays, getStreak } from '@/services/state';
 import { useGame } from '@/store/game-provider';
 
@@ -26,6 +27,11 @@ export default function HomeScreen() {
   const routinesToday = state.routines.filter((routine) => routine.history.includes(today)).length;
   const winsToday = (state.wins[today] ?? []).length;
   const xpToNext = Math.max(0, info.next - state.profile.xp);
+
+  const quickWin = (points: number) => {
+    impact();
+    dispatch({ type: 'wins/add', date: today, note: 'A small win', points });
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -167,12 +173,23 @@ export default function HomeScreen() {
             style={styles.cta}
             onPress={() => router.navigate('/list')}
           />
-          <Button
-            title="Log a win"
-            variant="secondary"
-            style={styles.cta}
-            onPress={() => router.navigate('/settings')}
-          />
+          <Card style={styles.quickWinCard}>
+            <ThemedText type="smallBold" themeColor="gold">Quick win</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {winsToday} wins today
+            </ThemedText>
+            <ThemedView style={styles.chipRow}>
+              {[5, 10, 15].map((pts) => (
+                <Button
+                  key={pts}
+                  title={`+${pts}`}
+                  variant={pts === 10 ? 'primary' : 'secondary'}
+                  style={styles.chip}
+                  onPress={() => quickWin(pts)}
+                />
+              ))}
+            </ThemedView>
+          </Card>
         </ThemedView>
       </SafeAreaView>
     </ThemedView>
@@ -286,5 +303,15 @@ const styles = StyleSheet.create({
   },
   streakDotToday: {
     borderWidth: 2,
+  },
+  quickWinCard: {
+    gap: Spacing.two,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  chip: {
+    flex: 1,
   },
 });

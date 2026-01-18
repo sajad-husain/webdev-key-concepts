@@ -18,3 +18,8 @@ export function impact(
   }
   void Haptics.impactAsync(style);
 }
+
+/** Heavy impact for level-up celebrations. No-op on web. */
+export function heavyImpact(): void {
+  impact(Haptics.ImpactFeedbackStyle.Heavy);
+}

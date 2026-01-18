@@ -3,8 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useS
 import { getItem, setItem } from '@/services/storage';
 import { createInitialState, reducer, type GameAction, type GameState } from '@/services/state';
 import { levelForXp, isLevelUp } from '@/services/gamification';
-import { impact } from '@/services/haptics';
-import * as Haptics from 'expo-haptics';
+import { heavyImpact } from '@/services/haptics';
 
 type GameContextValue = {
   state: GameState;
@@ -87,7 +86,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         title: newLevel.title,
         xpGained: state.profile.xp - prevXpRef.current,
       });
-      impact(Haptics.ImpactFeedbackStyle.Heavy);
+      heavyImpact();
     }
     prevXpRef.current = state.profile.xp;
   }, [state.profile.xp, hydrated]);
