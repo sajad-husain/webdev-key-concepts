@@ -6,6 +6,7 @@ import {
   levelForXp,
   streakFor,
   todayKey,
+  weekDaysFor,
   LEVEL_TITLES,
 } from '@/services/gamification';
 
@@ -97,5 +98,20 @@ describe('isLevelUp', () => {
   it('returns false when XP decreases or stays same', () => {
     expect(isLevelUp(100, 99)).toBe(false);
     expect(isLevelUp(150, 150)).toBe(false);
+  });
+});
+
+describe('weekDaysFor', () => {
+  it('returns 7 days including today, newest first', () => {
+    const days = weekDaysFor('2026-01-15');
+    expect(days).toHaveLength(7);
+    expect(days[0]).toBe('2026-01-15');
+    expect(days[6]).toBe('2026-01-09');
+  });
+
+  it('handles month boundaries correctly', () => {
+    const days = weekDaysFor('2026-03-01');
+    expect(days[0]).toBe('2026-03-01');
+    expect(days[6]).toBe('2026-02-23');
   });
 });

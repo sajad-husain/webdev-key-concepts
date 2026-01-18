@@ -90,3 +90,8 @@ export function uid(prefix = 'id'): string {
 export function isLevelUp(oldXp: number, newXp: number): boolean {
   return levelForXp(newXp).level > levelForXp(oldXp).level;
 }
+
+/** Returns the last 7 days (today + 6 previous) as date keys, newest first. */
+export function weekDaysFor(today: string): string[] {
+  return Array.from({ length: 7 }, (_, i) => addDaysKey(today, -i));
+}
