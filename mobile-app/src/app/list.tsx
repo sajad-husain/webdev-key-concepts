@@ -15,18 +15,21 @@ import { tap } from '@/services/haptics';
 import { useGame } from '@/store/game-provider';
 
 const ROW_COLORS = ['tint', 'accent', 'gold'] as const;
+const XP_OPTIONS = [5, XP.questDefault, 50] as const;
 
 export default function QuestsScreen() {
   const { state, dispatch } = useGame();
   const theme = useTheme();
   const [draft, setDraft] = useState('');
+  const [questXp, setQuestXp] = useState<(typeof XP_OPTIONS)[number]>(XP.questDefault);
 
   const addQuest = () => {
     const trimmed = draft.trim();
     if (!trimmed) {
       return;
     }
-    dispatch({ type: 'quests/add', title: trimmed, xp: XP.questDefault });
+    tap();
+    dispatch({ type: 'quests/add', title: trimmed, xp: questXp });
     setDraft('');
   };
 
@@ -53,6 +56,21 @@ export default function QuestsScreen() {
               style={styles.input}
             />
             <Button title="Add" onPress={addQuest} />
+          </ThemedView>
+
+          <ThemedView style={styles.xpPicker}>
+            {XP_OPTIONS.map((xp) => (
+              <Button
+                key={xp}
+                title={`+${xp}`}
+                variant={xp === questXp ? 'primary' : 'secondary'}
+                style={styles.xpChip}
+                onPress={() => {
+                  tap();
+                  setQuestXp(xp);
+                }}
+              />
+            ))}
           </ThemedView>
 
           <FlatList
@@ -176,5 +194,12 @@ const styles = StyleSheet.create({
   empty: {
     textAlign: 'center',
     marginTop: Spacing.five,
+  },
+  xpPicker: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  xpChip: {
+    flex: 1,
   },
 });
