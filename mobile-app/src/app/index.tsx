@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,10 +10,11 @@ import { ThemedView } from '@/components/themed-view';
 import { AnimatedRow } from '@/components/ui/animated-row';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { levelForXp, todayKey, weekDaysFor } from '@/services/gamification';
+import { levelForXp, todayKey, weekDaysFor, XP } from '@/services/gamification';
 import { impact } from '@/services/haptics';
 import { getActiveDays, getStreak } from '@/services/state';
 import { useGame } from '@/store/game-provider';
@@ -27,10 +29,18 @@ export default function HomeScreen() {
   const routinesToday = state.routines.filter((routine) => routine.history.includes(today)).length;
   const winsToday = (state.wins[today] ?? []).length;
   const xpToNext = Math.max(0, info.next - state.profile.xp);
+  const [questTitle, setQuestTitle] = useState('');
 
   const quickWin = (points: number) => {
     impact();
     dispatch({ type: 'wins/add', date: today, note: 'A small win', points });
+  };
+
+  const addQuest = () => {
+    if (!questTitle.trim()) return;
+    impact();
+    dispatch({ type: 'quests/add', title: questTitle.trim(), xp: XP.questDefault });
+    setQuestTitle('');
   };
 
   return (
@@ -190,6 +200,21 @@ export default function HomeScreen() {
               ))}
             </ThemedView>
           </Card>
+
+          <Card style={styles.quickQuestCard}>
+            <ThemedText type="smallBold" themeColor="accent">Quick quest</ThemedText>
+            <ThemedView style={styles.questComposer}>
+              <Input
+                placeholder="New quest..."
+                value={questTitle}
+                onChangeText={setQuestTitle}
+                returnKeyType="done"
+                onSubmitEditing={addQuest}
+                style={styles.questInput}
+              />
+              <Button title="Add" onPress={addQuest} />
+            </ThemedView>
+          </Card>
         </ThemedView>
       </SafeAreaView>
     </ThemedView>
@@ -312,6 +337,16 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   chip: {
+    flex: 1,
+  },
+  quickQuestCard: {
+    gap: Spacing.two,
+  },
+  questComposer: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  questInput: {
     flex: 1,
   },
 });
