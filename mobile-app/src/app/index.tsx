@@ -12,8 +12,8 @@ import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { levelForXp, todayKey } from '@/services/gamification';
-import { getStreak } from '@/services/state';
+import { levelForXp, todayKey, weekDaysFor } from '@/services/gamification';
+import { getActiveDays, getStreak } from '@/services/state';
 import { useGame } from '@/store/game-provider';
 
 export default function HomeScreen() {
@@ -114,6 +114,44 @@ export default function HomeScreen() {
             </AnimatedRow>
           </ThemedView>
 
+          <AnimatedRow delay={180}>
+            <Card style={styles.streakStrip}>
+              <ThemedText type="smallBold" themeColor="accent">This week</ThemedText>
+              <ThemedView style={styles.streakCells}>
+                {weekDaysFor(today).map((day, i) => {
+                  const isActive = getActiveDays(state).includes(day);
+                  const isToday = day === today;
+                  return (
+                    <ThemedView
+                      key={day}
+                      style={[
+                        styles.streakCell,
+                        isToday && styles.streakCellToday,
+                        isActive && styles.streakCellActive,
+                      ]}>
+                      <ThemedText
+                        type="small"
+                        style={[
+                          styles.streakDayLabel,
+                          isActive && styles.streakDayLabelActive,
+                          isToday && styles.streakDayLabelToday,
+                        ]}>
+                        {day.slice(5)}
+                      </ThemedText>
+                      <ThemedView
+                        style={[
+                          styles.streakDot,
+                          isActive && styles.streakDotActive,
+                          isToday && styles.streakDotToday,
+                        ]}
+                      />
+                    </ThemedView>
+                  );
+                })}
+              </ThemedView>
+            </Card>
+          </AnimatedRow>
+
           <Card style={styles.todayCard}>
             <ThemedText type="smallBold">Today</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
@@ -208,5 +246,45 @@ const styles = StyleSheet.create({
   },
   cta: {
     marginTop: Spacing.one,
+  },
+  streakStrip: {
+    gap: Spacing.two,
+  },
+  streakCells: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  streakCell: {
+    alignItems: 'center',
+    gap: Spacing.half,
+    minWidth: 36,
+  },
+  streakCellToday: {
+    transform: [{ scale: 1.1 }],
+  },
+  streakCellActive: {},
+  streakDayLabel: {
+    fontSize: 10,
+    color: 'inherit',
+  },
+  streakDayLabelActive: {
+    color: 'inherit',
+  },
+  streakDayLabelToday: {
+    fontWeight: '700',
+  },
+  streakDot: {
+    width: 10,
+    height: 10,
+    borderRadius: Radius.pill,
+    backgroundColor: 'transparent',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'currentColor',
+  },
+  streakDotActive: {
+    backgroundColor: 'currentColor',
+  },
+  streakDotToday: {
+    borderWidth: 2,
   },
 });
