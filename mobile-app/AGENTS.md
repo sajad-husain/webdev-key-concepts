@@ -16,8 +16,10 @@ knowledge from older SDKs.
 - **Reminders**: `expo-notifications` local notifications. Daily reminders use a
   `DAILY` trigger (no `repeats` field in SDK 57); a one-off test alarm uses a
   `TIME_INTERVAL` trigger (`src/services/notifications.ts`).
-- **Effects**: `expo-linear-gradient` (gradient fills/cards) and `expo-haptics`
-  (web-guarded taps via `src/services/haptics.ts`) — both Expo Go-safe.
+- **Effects**: `expo-linear-gradient` (gradient fills/cards), `expo-haptics`
+  (web-guarded taps + `heavyImpact` via `src/services/haptics.ts`),
+  `@react-native-community/datetimepicker` (native time picker for routine
+  reminders) and `expo-document-picker` (game-data import) — all Expo Go-safe.
 
 ## Commands (run from `mobile-app/`)
 
@@ -37,11 +39,12 @@ knowledge from older SDKs.
 ```
 mobile-app/
 ├── src/
-│   ├── app/            # routes/screens (index, list, goals, routines, settings, guide)
-│   ├── components/     # ThemedText/ThemedView + ui/ (Button, Card, Input)
+│   ├── app/            # routes/screens (index, list, goals, routines, settings, guide, error)
+│   ├── components/     # ThemedText/ThemedView, error-boundary + ui/ (Button, Card, Input, ProgressBar, LevelUpBanner)
 │   ├── constants/      # theme.ts — Colors, Spacing, Radius, Fonts
 │   ├── hooks/          # use-theme, use-color-scheme
-│   ├── services/       # storage.ts, api.ts (keep pure — unit test these)
+│   ├── services/       # storage.ts, api.ts, gamification.ts, haptics.ts (keep pure — unit test these)
+│   ├── store/          # game-provider.tsx (hydration, persistence, level-up detection)
 │   ├── types/          # ambient declarations (css.d.ts)
 │   └── global.css      # web font variables
 ├── __tests__/          # Jest unit tests for services
@@ -68,6 +71,12 @@ mobile-app/
   reminders" in system settings.
 - **Feedback**: row toggles and button taps should route through
   `src/services/haptics.ts` (`tap` / `impact`) so the web build stays a no-op.
+- **Backup/restore**: Settings has export (JSON via `Share`) and import
+  (`expo-document-picker` + `deserializeState`). Reset clears all slices and
+  storage, then hydrates with `createInitialState()`.
+- **Error handling**: `src/app/error.tsx` is the route-level error boundary.
+  `src/components/error-boundary.tsx` is a reusable class component that wraps
+  any subtree.
 
 ## Theming/tooling notes
 

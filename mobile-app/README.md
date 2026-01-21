@@ -7,14 +7,19 @@ full-stack backend course.
 
 ## What it does
 
-- **Home** — dashboard with your level, animated XP bar, day streak and a
-  quick look at today.
-- **Quests** — short-term goals. Finish one and bank the XP.
+- **Home** — dashboard with your level, animated XP bar, day streak, this-week
+  streak strip, quick-win chips (+5/+10/+15), quick-add quest, and a
+  first-launch onboarding card.
+- **Quests** — short-term goals with a per-quest XP picker (5/20/50). Finish
+  one and bank the XP.
 - **Goals** — long-term goals broken into milestones, each with +10 XP and an
   animated progress bar.
-- **Routines** — daily habits you check off; optional local notification
-  reminders at a time you pick.
-- **Wins** — log the day's small wins (+5/+10/+15 XP) straight into your level.
+- **Routines** — daily habits you check off; optional native time picker for
+  local notification reminders (Android/iOS) with a web text-input fallback.
+- **Wins** — log the day's small wins (+5/+10/+15 XP) straight into your
+  level. Export/import your game data as JSON and reset when needed.
+- **Guide** — how-to-play screen explaining the XP loop, habits, streaks and
+  the level table.
 
 ## Tech stack
 
@@ -26,6 +31,8 @@ full-stack backend course.
 | State         | Reducer + React context (`src/store/game-provider.tsx`) |
 | Persistence   | `@react-native-async-storage/async-storage` via `src/services/storage.ts` |
 | Reminders     | `expo-notifications` local daily notifications     |
+| Native picker | `@react-native-community/datetimepicker`           |
+| Import/backup | `expo-document-picker` + `Share`                   |
 | Animation     | `react-native-reanimated` (reduce-motion aware)    |
 | API           | built-in `fetch` via a small typed API client      |
 | Testing       | Jest + jest-expo                                   |
@@ -66,17 +73,18 @@ mobile-app/
 ├── src/
 │   ├── app/            # routes/screens (Expo Router file-based routing)
 │   │   ├── _layout.tsx # root layout: providers, splash, notification deep link
-│   │   ├── index.tsx   # Home tab — level/XP/streak dashboard
-│   │   ├── list.tsx    # Quests tab (short-term goals)
+│   │   ├── index.tsx   # Home tab — level/XP/streak/quick actions dashboard
+│   │   ├── list.tsx    # Quests tab (short-term goals + XP picker)
 │   │   ├── goals.tsx   # Goals tab (milestones + progress bar)
-│   │   ├── routines.tsx# Routines tab (daily habits + reminders)
-│   │   ├── settings.tsx# Wins tab (daily wins log)
-│   │   └── guide.tsx   # Guide tab (how-to-play + XP table)
-│   ├── components/     # ThemedText/ThemedView, app tabs, ui/ (Button, Card, Input, ProgressBar…)
+│   │   ├── routines.tsx# Routines tab (daily habits + native time picker)
+│   │   ├── settings.tsx# Wins tab (daily wins log + backup/restore/reset)
+│   │   ├── guide.tsx   # Guide tab (how-to-play + XP table)
+│   │   └── error.tsx   # Route-level error boundary
+│   ├── components/     # ThemedText/ThemedView, error-boundary, app tabs, ui/ (Button, Card, Input, ProgressBar, LevelUpBanner…)
 │   ├── constants/      # theme tokens (Colors, Spacing, Radius, Fonts)
 │   ├── hooks/          # color scheme + theme hooks
-│   ├── services/       # storage, api, gamification, state reducer, notifications
-│   ├── store/          # game context provider (hydration + persistence)
+│   ├── services/       # storage, api, gamification, state reducer, notifications, haptics
+│   ├── store/          # game context provider (hydration + persistence + level-up detection)
 │   ├── types/          # ambient type declarations (CSS modules)
 │   └── global.css      # web font variables
 └── __tests__/          # Jest unit tests (gamification, streak math, storage, api)
@@ -89,7 +97,8 @@ npm test
 ```
 
 Covers the pure service modules: the gamification engine (levels, streak math,
-date helpers), the AsyncStorage wrapper, and the API client (parsing and error
+date helpers, level-up detection, week-days selector), state serialization and
+sanitization, the AsyncStorage wrapper, and the API client (parsing and error
 handling). See [`docs/architecture.md`](docs/architecture.md) for how the pieces
 fit together.
 
@@ -107,3 +116,11 @@ fit together.
 - [x] Daily wins log
 - [x] Reanimated motion pass (reduce-motion aware)
 - [x] Tests, lint, typecheck green
+- [x] How-to-play guide tab + onboarding card
+- [x] Versioned game-data serialization + backup/restore/reset
+- [x] Native time picker for routine reminders
+- [x] Level-up banner + heavy haptic celebration
+- [x] This-week streak strip on Home
+- [x] Quick log-win chips + quick-add quest on Home
+- [x] Per-quest XP picker (5/20/50)
+- [x] Route-level error boundary + reusable ErrorBoundary
