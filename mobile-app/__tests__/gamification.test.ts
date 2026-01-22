@@ -2,12 +2,19 @@ import { describe, expect, it } from '@jest/globals';
 
 import {
   addDaysKey,
+  calculateReviewXp,
   isLevelUp,
   levelForXp,
+  sm2NextReview,
   streakFor,
   todayKey,
   weekDaysFor,
   LEVEL_TITLES,
+  SM2_MIN_EASE,
+  SM2_INITIAL_EASE,
+  REVIEW_BASE_XP,
+  REVIEW_GRADE_BONUS,
+  STREAK_BONUS_CAP,
 } from '@/services/gamification';
 
 describe('levelForXp', () => {
@@ -113,5 +120,81 @@ describe('weekDaysFor', () => {
     const days = weekDaysFor('2026-03-01');
     expect(days[0]).toBe('2026-03-01');
     expect(days[6]).toBe('2026-02-23');
+  });
+});
+
+describe('sm2NextReview', () => {
+  const today = '2026-01-22';
+  const freshCard = { easeFactor: SM2_INITIAL_EASE, interval: 0, repetitions: 0 };
+
+  it('Grade Again resets card to 1-day interval', () => {
+    const result = sm2NextReview(0, { easeFactor: 2.5, interval: 10, repetitions: 5 }, today);
+    expect(result.repetitions).toBe(0);
+    expect(result.interval).toBe(1);
+    expect(result.nextReview).toBe('2026-01-23');
+  });
+
+  it('Grade Good on new card sets 1-day interval', () => {
+    const result = sm2NextReview(2, freshCard, today);
+    expect(result.repetitions).toBe(1);
+    expect(result.interval).toBe(1);
+    expect(result.nextReview).toBe('2026-01-23');
+  });
+
+  it('Grade Good on second review sets 6-day interval', () => {
+    const card = { easeFactor: 2.5, interval: 1, repetitions: 1 };
+    const result = sm2NextReview(2, card, today);
+    expect(result.repetitions).toBe(2);
+    expect(result.interval).toBe(6);
+    expect(result.nextReview).toBe('2026-01-28');
+  });
+
+  it('Grade Good on third+ review multiplies interval by ease', () => {
+    const card = { easeFactor: 2.5, interval: 6, repetitions: 2 };
+    const result = sm2NextReview(2, card, today);
+    expect(result.interval).toBe(Math.round(6 * 2.5)); // 15
+    expect(result.nextReview).toBe('2026-02-06');
+  });
+
+  it('Grade Hard uses ease factor but no repetition bump', () => {
+    const card = { easeFactor: 2.5, interval: 6, repetitions: 2 };
+    const result = sm2NextReview(1, card, today);
+    expect(result.repetitions).toBe(3);
+    expect(result.easeFactor).toBeGreaterThanOrEqual(SM2_MIN_EASE);
+  });
+
+  it('Grade Easy increases ease factor more', () => {
+    const card = { easeFactor: 2.5, interval: 6, repetitions: 2 };
+    const resultEasy = sm2NextReview(3, card, today);
+    const resultGood = sm2NextReview(2, card, today);
+    expect(resultEasy.easeFactor).toBeGreaterThan(resultGood.easeFactor);
+  });
+
+  it('ease factor never drops below SM2_MIN_EASE', () => {
+    let card = { easeFactor: SM2_MIN_EASE, interval: 1, repetitions: 0 };
+    for (let i = 0; i < 10; i++) {
+      card = sm2NextReview(0, card, today);
+    }
+    expect(card.easeFactor).toBeGreaterThanOrEqual(SM2_MIN_EASE);
+  });
+});
+
+describe('calculateReviewXp', () => {
+  it('returns base XP for Again (grade 0)', () => {
+    expect(calculateReviewXp(0, 0)).toBe(REVIEW_BASE_XP + REVIEW_GRADE_BONUS[0]);
+  });
+
+  it('adds streak bonus up to cap', () => {
+    const xpNoStreak = calculateReviewXp(2, 0);
+    const xpStreak5 = calculateReviewXp(2, 5);
+    const xpStreak10 = calculateReviewXp(2, 10);
+    expect(xpStreak5 - xpNoStreak).toBe(STREAK_BONUS_CAP);
+    expect(xpStreak10 - xpNoStreak).toBe(STREAK_BONUS_CAP); // capped
+  });
+
+  it('Easy grade earns most XP', () => {
+    expect(calculateReviewXp(3, 0)).toBeGreaterThan(calculateReviewXp(2, 0));
+    expect(calculateReviewXp(2, 0)).toBeGreaterThan(calculateReviewXp(1, 0));
+    expect(calculateReviewXp(1, 0)).toBeGreaterThan(calculateReviewXp(0, 0));
   });
 });

@@ -95,3 +95,60 @@ export function isLevelUp(oldXp: number, newXp: number): boolean {
 export function weekDaysFor(today: string): string[] {
   return Array.from({ length: 7 }, (_, i) => addDaysKey(today, -i));
 }
+
+// SM-2 Spaced Repetition Algorithm
+
+export const SM2_MIN_EASE = 1.3;
+export const SM2_INITIAL_EASE = 2.5;
+export const REVIEW_BASE_XP = 3;
+export const REVIEW_GRADE_BONUS = { 0: 0, 1: 1, 2: 2, 3: 4 } as const;
+export const STREAK_BONUS_CAP = 5;
+
+type Sm2Input = {
+  easeFactor: number;
+  interval: number;
+  repetitions: number;
+};
+
+type Sm2Output = Sm2Input & { nextReview: string };
+
+export type ReviewGrade = 0 | 1 | 2 | 3;
+
+/** Apply SM-2 algorithm to calculate next review schedule. */
+export function sm2NextReview(
+  grade: ReviewGrade,
+  card: Sm2Input,
+  today: string,
+): Sm2Output {
+  let { easeFactor, interval, repetitions } = card;
+
+  if (grade === 0) {
+    // Again: reset repetitions, interval to 1 day
+    repetitions = 0;
+    interval = 1;
+  } else {
+    if (repetitions === 0) {
+      interval = 1;
+    } else if (repetitions === 1) {
+      interval = 6;
+    } else {
+      interval = Math.round(interval * easeFactor);
+    }
+    repetitions += 1;
+  }
+
+  // Update ease factor
+  easeFactor = Math.max(
+    SM2_MIN_EASE,
+    easeFactor + (0.1 - (3 - grade) * (0.08 + (3 - grade) * 0.02)),
+  );
+
+  const nextReview = addDaysKey(today, interval);
+
+  return { easeFactor, interval, repetitions, nextReview };
+}
+
+/** Calculate XP earned for a review based on grade and streak. */
+export function calculateReviewXp(grade: ReviewGrade, streak: number): number {
+  return REVIEW_BASE_XP + REVIEW_GRADE_BONUS[grade] + Math.min(streak, STREAK_BONUS_CAP);
+}
