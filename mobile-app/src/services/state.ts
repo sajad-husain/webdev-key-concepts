@@ -40,6 +40,44 @@ export type Win = {
   points: number;
 };
 
+export type Deck = {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+};
+
+export type Card = {
+  id: string;
+  deckId: string;
+  front: string;
+  back: string;
+  easeFactor: number;
+  interval: number;
+  repetitions: number;
+  nextReview: string;
+  isReversed: boolean;
+  createdAt: string;
+};
+
+export type ReviewLog = {
+  id: string;
+  cardId: string;
+  deckId: string;
+  grade: 0 | 1 | 2 | 3;
+  reviewedAt: string;
+  xpEarned: number;
+  easeFactor: number;
+  interval: number;
+  repetitions: number;
+};
+
+export type ReviewStreak = {
+  currentStreak: number;
+  longestStreak: number;
+  lastReviewDate: string | null;
+};
+
 export type Settings = {
   notifications: boolean;
   /** Whether the "how to play" onboarding card has been dismissed/opened. */
@@ -53,6 +91,10 @@ export type GameState = {
   routines: Routine[];
   wins: Record<string, Win[]>;
   settings: Settings;
+  decks: Deck[];
+  cards: Card[];
+  reviewLogs: ReviewLog[];
+  reviewStreak: ReviewStreak;
 };
 
 export type GameAction =
@@ -80,6 +122,10 @@ export function createInitialState(): GameState {
     routines: [],
     wins: {},
     settings: { notifications: true, seenGuide: false },
+    decks: [],
+    cards: [],
+    reviewLogs: [],
+    reviewStreak: { currentStreak: 0, longestStreak: 0, lastReviewDate: null },
   };
 }
 
@@ -404,6 +450,15 @@ export function sanitizeState(input: unknown): GameState {
         Object.entries(input.wins).map(([key, list]) => [key, toWins(list)]),
       )
     : base.wins;
+  const decks = Array.isArray(input.decks)
+    ? input.decks.map(toDeck).filter((d): d is Deck => d !== null)
+    : base.decks;
+  const cards = Array.isArray(input.cards)
+    ? input.cards.map(toCard).filter((c): c is Card => c !== null)
+    : base.cards;
+  const reviewLogs = Array.isArray(input.reviewLogs)
+    ? input.reviewLogs.map(toReviewLog).filter((l): l is ReviewLog => l !== null)
+    : base.reviewLogs;
   return {
     profile: isRecord(input.profile) ? { xp: toFiniteNumber(input.profile.xp) } : base.profile,
     quests,
@@ -416,11 +471,73 @@ export function sanitizeState(input: unknown): GameState {
           seenGuide: input.settings.seenGuide === true,
         }
       : base.settings,
+    decks,
+    cards,
+    reviewLogs,
+    reviewStreak: toReviewStreak(input.reviewStreak),
   };
 }
 
 function toWins(list: unknown): Win[] {
   return Array.isArray(list) ? list.map(toPoints).filter((w): w is Win => w !== null) : [];
+}
+
+function toDeck(value: unknown): Deck | null {
+  if (!isRecord(value) || typeof value.id !== 'string' || typeof value.name !== 'string') {
+    return null;
+  }
+  return {
+    id: value.id,
+    name: value.name,
+    description: typeof value.description === 'string' ? value.description : undefined,
+    createdAt: typeof value.createdAt === 'string' ? value.createdAt : '',
+  };
+}
+
+function toCard(value: unknown): Card | null {
+  if (!isRecord(value) || typeof value.id !== 'string' || typeof value.deckId !== 'string') {
+    return null;
+  }
+  return {
+    id: value.id,
+    deckId: value.deckId,
+    front: typeof value.front === 'string' ? value.front : '',
+    back: typeof value.back === 'string' ? value.back : '',
+    easeFactor: toFiniteNumber(value.easeFactor) || 2.5,
+    interval: toFiniteNumber(value.interval),
+    repetitions: toFiniteNumber(value.repetitions),
+    nextReview: typeof value.nextReview === 'string' ? value.nextReview : '',
+    isReversed: value.isReversed === true,
+    createdAt: typeof value.createdAt === 'string' ? value.createdAt : '',
+  };
+}
+
+function toReviewLog(value: unknown): ReviewLog | null {
+  if (!isRecord(value) || typeof value.id !== 'string' || typeof value.cardId !== 'string') {
+    return null;
+  }
+  return {
+    id: value.id,
+    cardId: value.cardId,
+    deckId: typeof value.deckId === 'string' ? value.deckId : '',
+    grade: typeof value.grade === 'number' ? (value.grade as 0 | 1 | 2 | 3) : 0,
+    reviewedAt: typeof value.reviewedAt === 'string' ? value.reviewedAt : '',
+    xpEarned: toFiniteNumber(value.xpEarned),
+    easeFactor: toFiniteNumber(value.easeFactor) || 2.5,
+    interval: toFiniteNumber(value.interval),
+    repetitions: toFiniteNumber(value.repetitions),
+  };
+}
+
+function toReviewStreak(value: unknown): ReviewStreak {
+  if (!isRecord(value)) {
+    return { currentStreak: 0, longestStreak: 0, lastReviewDate: null };
+  }
+  return {
+    currentStreak: toFiniteNumber(value.currentStreak),
+    longestStreak: toFiniteNumber(value.longestStreak),
+    lastReviewDate: typeof value.lastReviewDate === 'string' ? value.lastReviewDate : null,
+  };
 }
 
 export const GAME_STATE_VERSION = 1 as const;
