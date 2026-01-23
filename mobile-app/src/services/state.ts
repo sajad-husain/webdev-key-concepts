@@ -500,6 +500,32 @@ export function getStreak(state: GameState): number {
   return streakFor(getActiveDays(state), todayKey());
 }
 
+/** Get all cards due for review today or earlier. */
+export function getDueCards(state: GameState, deckId?: string): Card[] {
+  const today = todayKey();
+  return state.cards.filter(
+    (c) => c.nextReview <= today && (!deckId || c.deckId === deckId),
+  );
+}
+
+/** Get a deck by ID. */
+export function getDeckById(state: GameState, deckId: string): Deck | undefined {
+  return state.decks.find((d) => d.id === deckId);
+}
+
+/** Get stats for a deck. */
+export function getDeckStats(
+  state: GameState,
+  deckId: string,
+): { total: number; due: number; newCards: number; reviewed: number } {
+  const cards = state.cards.filter((c) => c.deckId === deckId);
+  const today = todayKey();
+  const due = cards.filter((c) => c.nextReview <= today);
+  const newCards = cards.filter((c) => c.repetitions === 0);
+  const reviewed = cards.filter((c) => c.repetitions > 0);
+  return { total: cards.length, due: due.length, newCards: newCards.length, reviewed: reviewed.length };
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
