@@ -1,4 +1,13 @@
-import { streakFor, todayKey, uid, XP } from '@/services/gamification';
+import {
+  addDaysKey,
+  streakFor,
+  todayKey,
+  uid,
+  XP,
+  SM2_INITIAL_EASE,
+  sm2NextReview,
+  type ReviewGrade,
+} from '@/services/gamification';
 
 export type Profile = {
   xp: number;
@@ -112,7 +121,15 @@ export type GameAction =
   | { type: 'wins/add'; date: string; note: string; points: number }
   | { type: 'wins/remove'; date: string; id: string }
   | { type: 'settings/toggleNotifications' }
-  | { type: 'settings/markGuideSeen' };
+  | { type: 'settings/markGuideSeen' }
+  | { type: 'decks/add'; name: string; description?: string }
+  | { type: 'decks/remove'; id: string }
+  | { type: 'decks/rename'; id: string; name: string }
+  | { type: 'cards/add'; deckId: string; front: string; back: string }
+  | { type: 'cards/remove'; id: string }
+  | { type: 'cards/update'; id: string; front: string; back: string }
+  | { type: 'review/submit'; cardId: string; grade: 0 | 1 | 2 | 3; xpEarned: number }
+  | { type: 'reviewStreak/update'; date: string };
 
 export function createInitialState(): GameState {
   return {
@@ -317,6 +334,136 @@ export function reducer(state: GameState, action: GameAction): GameState {
         return state;
       }
       return { ...state, settings: { ...state.settings, seenGuide: true } };
+
+    case 'decks/add': {
+      const deck: Deck = {
+        id: uid('deck'),
+        name: action.name,
+        description: action.description,
+        createdAt: todayKey(),
+      };
+      return { ...state, decks: [...state.decks, deck] };
+    }
+
+    case 'decks/remove':
+      return {
+        ...state,
+        decks: state.decks.filter((d) => d.id !== action.id),
+        cards: state.cards.filter((c) => c.deckId !== action.id),
+      };
+
+    case 'decks/rename':
+      return {
+        ...state,
+        decks: state.decks.map((d) =>
+          d.id === action.id ? { ...d, name: action.name } : d,
+        ),
+      };
+
+    case 'cards/add': {
+      const now = todayKey();
+      const card: Card = {
+        id: uid('card'),
+        deckId: action.deckId,
+        front: action.front,
+        back: action.back,
+        easeFactor: SM2_INITIAL_EASE,
+        interval: 0,
+        repetitions: 0,
+        nextReview: now,
+        isReversed: false,
+        createdAt: now,
+      };
+      const reverseCard: Card = {
+        id: uid('card'),
+        deckId: action.deckId,
+        front: action.back,
+        back: action.front,
+        easeFactor: SM2_INITIAL_EASE,
+        interval: 0,
+        repetitions: 0,
+        nextReview: now,
+        isReversed: true,
+        createdAt: now,
+      };
+      return {
+        ...state,
+        cards: [...state.cards, card, reverseCard],
+      };
+    }
+
+    case 'cards/remove':
+      return {
+        ...state,
+        cards: state.cards.filter((c) => c.id !== action.id),
+      };
+
+    case 'cards/update':
+      return {
+        ...state,
+        cards: state.cards.map((c) =>
+          c.id === action.id ? { ...c, front: action.front, back: action.back } : c,
+        ),
+      };
+
+    case 'review/submit': {
+      const now = new Date().toISOString();
+      const card = state.cards.find((c) => c.id === action.cardId);
+      if (!card) {
+        return state;
+      }
+      const grade = action.grade as ReviewGrade;
+      const sm2Result = sm2NextReview(grade, card, todayKey());
+      const log: ReviewLog = {
+        id: uid('review'),
+        cardId: action.cardId,
+        deckId: card.deckId,
+        grade,
+        reviewedAt: now,
+        xpEarned: action.xpEarned,
+        easeFactor: sm2Result.easeFactor,
+        interval: sm2Result.interval,
+        repetitions: sm2Result.repetitions,
+      };
+      const withXp = addXp(state, action.xpEarned);
+      return {
+        ...withXp,
+        cards: state.cards.map((c) =>
+          c.id === action.cardId
+            ? {
+                ...c,
+                easeFactor: sm2Result.easeFactor,
+                interval: sm2Result.interval,
+                repetitions: sm2Result.repetitions,
+                nextReview: sm2Result.nextReview,
+              }
+            : c,
+        ),
+        reviewLogs: [...state.reviewLogs, log],
+      };
+    }
+
+    case 'reviewStreak/update': {
+      const { currentStreak, longestStreak } = state.reviewStreak;
+      const lastDate = state.reviewStreak.lastReviewDate;
+      const today = action.date;
+      let newStreak: number;
+      if (lastDate === today) {
+        newStreak = currentStreak;
+      } else if (lastDate === addDaysKey(today, -1)) {
+        newStreak = currentStreak + 1;
+      } else {
+        newStreak = 1;
+      }
+      return {
+        ...state,
+        reviewStreak: {
+          currentStreak: newStreak,
+          longestStreak: Math.max(longestStreak, newStreak),
+          lastReviewDate: today,
+        },
+      };
+    }
 
     default:
       return state;
