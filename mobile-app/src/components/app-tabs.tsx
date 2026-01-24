@@ -36,6 +36,14 @@ export default function AppTabs() {
         />
       </NativeTabs.Trigger>
 
+      <NativeTabs.Trigger name="decks">
+        <NativeTabs.Trigger.Label>Decks</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          src={require('@/assets/images/tabIcons/decks.png')}
+          renderingMode="template"
+        />
+      </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="routines">
         <NativeTabs.Trigger.Label>Routines</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
