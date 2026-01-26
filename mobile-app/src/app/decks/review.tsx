@@ -22,8 +22,7 @@ export default function ReviewSessionScreen() {
   const dueCards = getDueCards(state, deckId);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
-  const [totalXpEarned, setTotalXpEarned] = useState(0);
-  const [reviewCount, setReviewCount] = useState(0);
+  const [gradeLog, setGradeLog] = useState<{ grade: number; xp: number }[]>([]);
 
   const currentCard = dueCards[currentIndex];
   const isSessionDone = currentIndex >= dueCards.length;
@@ -45,22 +44,13 @@ export default function ReviewSessionScreen() {
   }
 
   if (isSessionDone) {
-    return (
-      <ThemedView style={styles.container}>
-        <SafeAreaView style={styles.safeArea}>
-          <Card style={styles.summaryCard}>
-            <ThemedText type="subtitle" themeColor="success">Session complete!</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              You reviewed {reviewCount} card{reviewCount === 1 ? '' : 's'}.
-            </ThemedText>
-            <ThemedText type="subtitle" themeColor="gold">
-              +{totalXpEarned} XP earned
-            </ThemedText>
-            <Button title="Back to decks" onPress={() => router.back()} />
-          </Card>
-        </SafeAreaView>
-      </ThemedView>
-    );
+    const totalXp = gradeLog.reduce((sum, g) => sum + g.xp, 0);
+    const reviewCount = gradeLog.length;
+    router.replace({
+      pathname: '/decks/summary',
+      params: { totalXp, reviewCount, gradeLog: JSON.stringify(gradeLog), deckId },
+    });
+    return null;
   }
 
   const handleReveal = () => {
@@ -72,8 +62,7 @@ export default function ReviewSessionScreen() {
     const xp = calculateReviewXp(grade, state.reviewStreak.currentStreak);
     dispatch({ type: 'review/submit', cardId: currentCard.id, grade, xpEarned: xp });
     dispatch({ type: 'reviewStreak/update', date: new Date().toISOString().slice(0, 10) });
-    setTotalXpEarned((prev) => prev + xp);
-    setReviewCount((prev) => prev + 1);
+    setGradeLog((prev) => [...prev, { grade, xp }]);
     setRevealed(false);
     setCurrentIndex((prev) => prev + 1);
   };
