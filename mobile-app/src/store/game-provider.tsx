@@ -31,6 +31,7 @@ const PERSIST_KEYS: { key: string; pick: (state: GameState) => unknown }[] = [
   { key: 'cards', pick: (s) => s.cards },
   { key: 'reviewLogs', pick: (s) => s.reviewLogs },
   { key: 'reviewStreak', pick: (s) => s.reviewStreak },
+  { key: 'reviewSession', pick: (s) => s.reviewSession },
 ];
 
 export function GameProvider({ children }: { children: ReactNode }) {
@@ -48,7 +49,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     (async () => {
-      const [profile, quests, goals, routines, wins, settings, decks, cards, reviewLogs, reviewStreak] = await Promise.all([
+      const [profile, quests, goals, routines, wins, settings, decks, cards, reviewLogs, reviewStreak, reviewSession] = await Promise.all([
         getItem('profile', createInitialState().profile),
         getItem('quests', createInitialState().quests),
         getItem('goals', createInitialState().goals),
@@ -59,11 +60,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
         getItem('cards', createInitialState().cards),
         getItem('reviewLogs', createInitialState().reviewLogs),
         getItem('reviewStreak', createInitialState().reviewStreak),
+        getItem('reviewSession', createInitialState().reviewSession),
       ]);
       if (cancelled) {
         return;
       }
-      dispatch({ type: 'HYDRATE', state: { profile, quests, goals, routines, wins, settings, decks, cards, reviewLogs, reviewStreak } });
+      dispatch({ type: 'HYDRATE', state: { profile, quests, goals, routines, wins, settings, decks, cards, reviewLogs, reviewStreak, reviewSession } });
       setHydrated(true);
     })();
 

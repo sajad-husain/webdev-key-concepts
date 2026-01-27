@@ -87,6 +87,13 @@ export type ReviewStreak = {
   lastReviewDate: string | null;
 };
 
+export type ReviewSession = {
+  deckId: string | null;
+  currentIndex: number;
+  gradeLog: { grade: number; xp: number }[];
+  startedAt: string | null;
+};
+
 export type Settings = {
   notifications: boolean;
   /** Whether the "how to play" onboarding card has been dismissed/opened. */
@@ -104,6 +111,7 @@ export type GameState = {
   cards: Card[];
   reviewLogs: ReviewLog[];
   reviewStreak: ReviewStreak;
+  reviewSession: ReviewSession;
 };
 
 export type GameAction =
@@ -129,7 +137,9 @@ export type GameAction =
   | { type: 'cards/remove'; id: string }
   | { type: 'cards/update'; id: string; front: string; back: string }
   | { type: 'review/submit'; cardId: string; grade: 0 | 1 | 2 | 3; xpEarned: number }
-  | { type: 'reviewStreak/update'; date: string };
+  | { type: 'reviewStreak/update'; date: string }
+  | { type: 'reviewSession/save'; session: ReviewSession }
+  | { type: 'reviewSession/clear' };
 
 export function createInitialState(): GameState {
   return {
@@ -143,6 +153,7 @@ export function createInitialState(): GameState {
     cards: [],
     reviewLogs: [],
     reviewStreak: { currentStreak: 0, longestStreak: 0, lastReviewDate: null },
+    reviewSession: { deckId: null, currentIndex: 0, gradeLog: [], startedAt: null },
   };
 }
 
@@ -465,6 +476,15 @@ export function reducer(state: GameState, action: GameAction): GameState {
       };
     }
 
+    case 'reviewSession/save':
+      return { ...state, reviewSession: action.session };
+
+    case 'reviewSession/clear':
+      return {
+        ...state,
+        reviewSession: { deckId: null, currentIndex: 0, gradeLog: [], startedAt: null },
+      };
+
     default:
       return state;
   }
@@ -648,6 +668,7 @@ export function sanitizeState(input: unknown): GameState {
     cards,
     reviewLogs,
     reviewStreak: toReviewStreak(input.reviewStreak),
+    reviewSession: toReviewSession(input.reviewSession),
   };
 }
 
@@ -710,6 +731,26 @@ function toReviewStreak(value: unknown): ReviewStreak {
     currentStreak: toFiniteNumber(value.currentStreak),
     longestStreak: toFiniteNumber(value.longestStreak),
     lastReviewDate: typeof value.lastReviewDate === 'string' ? value.lastReviewDate : null,
+  };
+}
+
+function toReviewSession(value: unknown): ReviewSession {
+  if (!isRecord(value)) {
+    return { deckId: null, currentIndex: 0, gradeLog: [], startedAt: null };
+  }
+  const gradeLog = Array.isArray(value.gradeLog)
+    ? value.gradeLog
+        .map((g: unknown) => {
+          if (!isRecord(g)) return null;
+          return { grade: toFiniteNumber(g.grade), xp: toFiniteNumber(g.xp) };
+        })
+        .filter((g): g is { grade: number; xp: number } => g !== null)
+    : [];
+  return {
+    deckId: typeof value.deckId === 'string' ? value.deckId : null,
+    currentIndex: toFiniteNumber(value.currentIndex),
+    gradeLog,
+    startedAt: typeof value.startedAt === 'string' ? value.startedAt : null,
   };
 }
 
