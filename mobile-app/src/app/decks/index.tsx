@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 import { DeckCard } from '@/components/ui/deck-card';
 import { Input } from '@/components/ui/input';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { getDeckStats, getDueCards } from '@/services/state';
+import { getDeckStats, getDueCards, getReviewStreak } from '@/services/state';
 import { useGame } from '@/store/game-provider';
 import { router } from 'expo-router';
 
@@ -20,6 +20,7 @@ export default function DecksScreen() {
   const [deckDescription, setDeckDescription] = useState('');
 
   const totalDue = getDueCards(state).length;
+  const reviewStreak = getReviewStreak(state);
 
   const addDeck = () => {
     const name = deckName.trim();
@@ -37,6 +38,13 @@ export default function DecksScreen() {
           <ThemedText type="small" themeColor="textSecondary">
             Build flashcard decks to boost your XP with daily reviews.
           </ThemedText>
+          {reviewStreak.currentStreak > 0 && (
+            <Card style={styles.streakBadge}>
+              <ThemedText type="smallBold" themeColor="accent">
+                🔥 {reviewStreak.currentStreak} day review streak
+              </ThemedText>
+            </Card>
+          )}
           {totalDue > 0 && (
             <Card style={styles.dueBanner}>
               <ThemedText type="smallBold" themeColor="accent">
@@ -121,6 +129,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: Spacing.two,
+  },
+  streakBadge: {
     marginTop: Spacing.two,
   },
   addCard: {

@@ -23,3 +23,11 @@ export function impact(
 export function heavyImpact(): void {
   impact(Haptics.ImpactFeedbackStyle.Heavy);
 }
+
+/** Celebration haptic for streak milestones. No-op on web. */
+export function celebration(): void {
+  if (Platform.OS === 'web') {
+    return;
+  }
+  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+}

@@ -546,6 +546,11 @@ export function getDeckStats(
   return { total: cards.length, due: due.length, newCards: newCards.length, reviewed: reviewed.length };
 }
 
+/** Get the current review streak. */
+export function getReviewStreak(state: GameState): ReviewStreak {
+  return state.reviewStreak;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

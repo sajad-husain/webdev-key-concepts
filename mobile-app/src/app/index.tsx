@@ -16,7 +16,7 @@ import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/th
 import { useTheme } from '@/hooks/use-theme';
 import { levelForXp, todayKey, weekDaysFor, XP } from '@/services/gamification';
 import { impact } from '@/services/haptics';
-import { getActiveDays, getStreak } from '@/services/state';
+import { getActiveDays, getStreak, getReviewStreak } from '@/services/state';
 import { useGame } from '@/store/game-provider';
 
 export default function HomeScreen() {
@@ -24,6 +24,7 @@ export default function HomeScreen() {
   const theme = useTheme();
   const info = levelForXp(state.profile.xp);
   const streak = getStreak(state);
+  const reviewStreak = getReviewStreak(state);
   const openQuests = state.quests.filter((quest) => !quest.done).length;
   const today = todayKey();
   const routinesToday = state.routines.filter((routine) => routine.history.includes(today)).length;
@@ -131,6 +132,17 @@ export default function HomeScreen() {
           </ThemedView>
 
           <AnimatedRow delay={180}>
+            <Card style={styles.statCard}>
+              <ThemedText type="subtitle" themeColor="accent">
+                {reviewStreak.currentStreak}
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                review streak
+              </ThemedText>
+            </Card>
+          </AnimatedRow>
+
+          <AnimatedRow delay={240}>
             <Card style={styles.streakStrip}>
               <ThemedText type="smallBold" themeColor="accent">This week</ThemedText>
               <ThemedView style={styles.streakCells}>
