@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import type { Routine } from '@/services/state';
 
 export const REMINDER_ID_PREFIX = 'routine-';
+export const REVIEW_REMINDER_ID = 'review-reminder';
 const TEST_ALARM_ID = 'alarm-test';
 
 Notifications.setNotificationHandler({
@@ -128,4 +129,46 @@ export async function rescheduleDaily(
     });
   }
   return true;
+}
+
+export async function scheduleReviewReminder(
+  enabled: boolean,
+  hour = 20,
+  minute = 0,
+): Promise<void> {
+  if (!supported()) {
+    return;
+  }
+  await ensureChannel();
+  const granted = await ensurePermissions();
+  if (!granted) {
+    return;
+  }
+
+  await Notifications.cancelScheduledNotificationAsync(REVIEW_REMINDER_ID);
+
+  if (!enabled) {
+    return;
+  }
+
+  await Notifications.scheduleNotificationAsync({
+    identifier: REVIEW_REMINDER_ID,
+    content: {
+      title: 'Time to review!',
+      body: 'Your flashcards are waiting. Keep your streak alive!',
+      sound: 'default',
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DAILY,
+      hour,
+      minute,
+    },
+  });
+}
+
+export async function cancelReviewReminder(): Promise<void> {
+  if (!supported()) {
+    return;
+  }
+  await Notifications.cancelScheduledNotificationAsync(REVIEW_REMINDER_ID);
 }
