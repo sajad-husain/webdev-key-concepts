@@ -58,6 +58,10 @@ export default function DecksScreen() {
           )}
         </ThemedView>
 
+        <Card style={styles.statsLink}>
+          <Button title="View statistics" variant="ghost" onPress={() => router.push('/decks/stats')} />
+        </Card>
+
         <Card style={styles.addCard}>
           <ThemedText type="smallBold">New deck</ThemedText>
           <Input
@@ -130,6 +134,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: Spacing.two,
+  },
+  statsLink: {
+    marginTop: Spacing.one,
   },
   streakBadge: {
     marginTop: Spacing.two,
