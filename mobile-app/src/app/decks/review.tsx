@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { GradeButtons } from '@/components/ui/grade-buttons';
 import { ReviewProgress } from '@/components/ui/review-progress';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { calculateReviewXp } from '@/services/gamification';
 import { impact } from '@/services/haptics';
@@ -68,9 +69,19 @@ export default function ReviewSessionScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ReviewProgress current={currentIndex} total={dueCards.length} />
+    <ErrorBoundary
+      fallback={
+        <ThemedView style={styles.container}>
+          <ThemedText type="subtitle" themeColor="danger">
+            Review session error
+          </ThemedText>
+          <Button title="Back to decks" onPress={() => router.back()} />
+        </ThemedView>
+      }
+    >
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+          <ReviewProgress current={currentIndex} total={dueCards.length} />
 
         <Card style={styles.cardContainer}>
           <Pressable onPress={revealed ? undefined : handleReveal}>
@@ -103,7 +114,8 @@ export default function ReviewSessionScreen() {
         />
       </SafeAreaView>
     </ThemedView>
-  );
+  </ErrorBoundary>
+);
 }
 
 const styles = StyleSheet.create({
