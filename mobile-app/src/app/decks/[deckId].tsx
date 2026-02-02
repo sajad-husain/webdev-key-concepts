@@ -15,12 +15,25 @@ import { tap } from '@/services/haptics';
 import { useGame } from '@/store/game-provider';
 
 export default function DeckDetailScreen() {
-  const { deckId } = useLocalSearchParams<{ deckId: string }>();
+  const params = useLocalSearchParams();
+  const deckId = params?.deckId as string;
   const { state, dispatch } = useGame();
   const theme = useTheme();
-  const deck = getDeckById(state, deckId);
-  const stats = getDeckStats(state, deckId);
-  const deckCards = state.cards.filter((c) => c.deckId === deckId);
+  const deck = deckId ? getDeckById(state, deckId) : undefined;
+  const stats = deckId ? getDeckStats(state, deckId) : { total: 0, due: 0, newCards: 0, reviewed: 0 };
+  const deckCards = deckId ? state.cards.filter((c) => c.deckId === deckId) : [];
+
+  if (!deckId) {
+    return (
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+          <ThemedText type="subtitle">Invalid deck</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">Missing deck ID. Please go back and select a deck.</ThemedText>
+          <Button title="Back to decks" onPress={() => router.back()} />
+        </SafeAreaView>
+      </ThemedView>
+    );
+  }
 
   if (!deck) {
     return (
@@ -34,6 +47,8 @@ export default function DeckDetailScreen() {
   }
 
   const addCard = (front: string, back: string) => {
+    if (!deckId) return;
+    console.log('Adding card to deck:', deckId, { front, back });
     dispatch({ type: 'cards/add', deckId, front, back });
   };
 
