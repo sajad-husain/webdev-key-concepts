@@ -6,6 +6,11 @@ app.get('/', (req, res) => {
     res.send('Hello World!')
 })
 
+app.get('/users', (req, res) => {
+    const { name, email } = req.body
+    res.json({ received: { name, email } })
+})
+
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
