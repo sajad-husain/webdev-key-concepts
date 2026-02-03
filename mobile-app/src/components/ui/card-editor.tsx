@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Spacing } from '@/constants/theme';
 import { impact } from '@/services/haptics';
+import { useToast } from './toast-provider';
 
 type CardEditorProps = {
   onAdd: (front: string, back: string) => void;
@@ -15,6 +16,7 @@ type CardEditorProps = {
 export function CardEditor({ onAdd }: CardEditorProps) {
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
+  const { showToast } = useToast();
 
   const handleSubmit = () => {
     const f = front.trim();
@@ -22,6 +24,7 @@ export function CardEditor({ onAdd }: CardEditorProps) {
     if (!f || !b) return;
     impact();
     onAdd(f, b);
+    showToast({ message: 'Card added! Reverse card created.', type: 'success' });
     setFront('');
     setBack('');
   };

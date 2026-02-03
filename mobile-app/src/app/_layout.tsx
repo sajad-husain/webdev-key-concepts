@@ -8,6 +8,7 @@ import { Platform, useColorScheme } from 'react-native';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
 import { LevelUpBanner } from '@/components/ui/level-up-banner';
+import { ToastProvider } from '@/components/ui/toast-provider';
 import { GameProvider, useGame } from '@/store/game-provider';
 
 SplashScreen.preventAutoHideAsync();
@@ -56,8 +57,10 @@ export default function TabLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <StatusBar style="auto" />
       <GameProvider>
-        <AnimatedSplashOverlay />
-        <AppContent />
+        <ToastProvider>
+          <AnimatedSplashOverlay />
+          <AppContent />
+        </ToastProvider>
       </GameProvider>
     </ThemeProvider>
   );
