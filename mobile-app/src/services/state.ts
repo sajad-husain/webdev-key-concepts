@@ -9,6 +9,36 @@ import {
   type ReviewGrade,
 } from '@/services/gamification';
 
+/** Creates a card pair (original + reverse) for a deck. */
+export function createCardPair(deckId: string, front: string, back: string): [Card, Card] {
+  const now = todayKey();
+  const card: Card = {
+    id: uid('card'),
+    deckId,
+    front,
+    back,
+    easeFactor: SM2_INITIAL_EASE,
+    interval: 0,
+    repetitions: 0,
+    nextReview: now,
+    isReversed: false,
+    createdAt: now,
+  };
+  const reverseCard: Card = {
+    id: uid('card'),
+    deckId,
+    front: back,
+    back: front,
+    easeFactor: SM2_INITIAL_EASE,
+    interval: 0,
+    repetitions: 0,
+    nextReview: now,
+    isReversed: true,
+    createdAt: now,
+  };
+  return [card, reverseCard];
+}
+
 export type Profile = {
   xp: number;
 };
@@ -372,31 +402,7 @@ export function reducer(state: GameState, action: GameAction): GameState {
       };
 
     case 'cards/add': {
-      const now = todayKey();
-      const card: Card = {
-        id: uid('card'),
-        deckId: action.deckId,
-        front: action.front,
-        back: action.back,
-        easeFactor: SM2_INITIAL_EASE,
-        interval: 0,
-        repetitions: 0,
-        nextReview: now,
-        isReversed: false,
-        createdAt: now,
-      };
-      const reverseCard: Card = {
-        id: uid('card'),
-        deckId: action.deckId,
-        front: action.back,
-        back: action.front,
-        easeFactor: SM2_INITIAL_EASE,
-        interval: 0,
-        repetitions: 0,
-        nextReview: now,
-        isReversed: true,
-        createdAt: now,
-      };
+      const [card, reverseCard] = createCardPair(action.deckId, action.front, action.back);
       return {
         ...state,
         cards: [...state.cards, card, reverseCard],
