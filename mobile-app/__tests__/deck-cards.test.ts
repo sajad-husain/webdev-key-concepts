@@ -1,5 +1,6 @@
 /// <reference types="jest" />
-import { reducer, createInitialState, type Card } from '@/services/state';
+/// <reference types="jest" />
+import { reducer, createInitialState, type Card, getDueCards } from '@/services/state';
 
 describe('Card Reducer Logic', () => {
   it('creates two cards with correct properties on cards/add', () => {
@@ -105,5 +106,67 @@ describe('Card Reducer Logic', () => {
     const updatedCard = newState.cards.find((c) => c.id === cardId);
     expect(updatedCard?.front).toBe('New Front');
     expect(updatedCard?.back).toBe('New Back');
+  });
+});
+
+describe('Navigation Logic', () => {
+  it('getDueCards returns cards due for review for a specific deck', () => {
+    const initialState = createInitialState();
+    const deckId = 'test-deck';
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Add cards to the deck
+    const addAction = {
+      type: 'cards/add' as const,
+      deckId,
+      front: 'Q1',
+      back: 'A1',
+    };
+    let state = reducer(initialState, addAction);
+
+    // Manually set one card as due today, one as due tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+
+    state = reducer(state, {
+      type: 'cards/update' as const,
+      id: state.cards[0].id,
+      front: 'Q1',
+      back: 'A1',
+    });
+
+    // Direct manipulation for test - set nextReview
+    const cards = state.cards.map((c: Card) =>
+      c.id === state.cards[0].id ? { ...c, nextReview: today } : { ...c, nextReview: tomorrowStr }
+    );
+    state = { ...state, cards };
+
+    const dueCards = getDueCards(state, deckId);
+    expect(dueCards.length).toBeGreaterThanOrEqual(1);
+    expect(dueCards.every((c) => c.nextReview <= today)).toBe(true);
+  });
+
+  it('getDueCards returns empty array for deck with no due cards', () => {
+    const initialState = createInitialState();
+    const deckId = 'test-deck';
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+
+    const addAction = {
+      type: 'cards/add' as const,
+      deckId,
+      front: 'Q1',
+      back: 'A1',
+    };
+    let state = reducer(initialState, addAction);
+
+    // Set both cards to be due tomorrow
+    const cards = state.cards.map((c: Card) => ({ ...c, nextReview: tomorrowStr }));
+    state = { ...state, cards };
+
+    const dueCards = getDueCards(state, deckId);
+    expect(dueCards.length).toBe(0);
   });
 });
