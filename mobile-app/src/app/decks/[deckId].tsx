@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -22,6 +23,7 @@ export default function DeckDetailScreen() {
   const deck = deckId ? getDeckById(state, deckId) : undefined;
   const stats = deckId ? getDeckStats(state, deckId) : { total: 0, due: 0, newCards: 0, reviewed: 0 };
   const deckCards = deckId ? state.cards.filter((c) => c.deckId === deckId) : [];
+  const [editingCard, setEditingCard] = useState<{ id: string; front: string; back: string } | null>(null);
 
   if (!deckId) {
     return (
@@ -63,6 +65,19 @@ export default function DeckDetailScreen() {
     ]);
   };
 
+  const updateCard = (id: string, front: string, back: string) => {
+    dispatch({ type: 'cards/update', id, front, back });
+    setEditingCard(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingCard(null);
+  };
+
+  const startEdit = (card: { id: string; front: string; back: string }) => {
+    setEditingCard({ id: card.id, front: card.front, back: card.back });
+  };
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -84,7 +99,12 @@ export default function DeckDetailScreen() {
           )}
         </ThemedView>
 
-        <CardEditor onAdd={addCard} />
+        <CardEditor
+          onAdd={addCard}
+          onUpdate={updateCard}
+          editingCard={editingCard}
+          onCancel={cancelEdit}
+        />
 
         <FlatList
           data={deckCards}
@@ -123,11 +143,20 @@ export default function DeckDetailScreen() {
                       {item.back}
                     </ThemedText>
                   </Pressable>
-                  <Button
-                    title="Remove"
-                    variant="ghost"
-                    onPress={() => removeCard(item.id)}
-                  />
+                  <ThemedView style={styles.cardActions}>
+                    <Button
+                      title="Edit"
+                      variant="ghost"
+                      onPress={() => startEdit(item)}
+                      style={styles.actionButton}
+                    />
+                    <Button
+                      title="Remove"
+                      variant="ghost"
+                      onPress={() => removeCard(item.id)}
+                      style={styles.actionButton}
+                    />
+                  </ThemedView>
                 </Card>
               </AnimatedRow>
             );
@@ -190,5 +219,14 @@ const styles = StyleSheet.create({
   empty: {
     textAlign: 'center',
     marginTop: Spacing.five,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    gap: Spacing.one,
+  },
+  actionButton: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.half,
+    minHeight: 32,
   },
 });

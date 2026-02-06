@@ -11,29 +11,40 @@ import { useToast } from './toast-provider';
 
 type CardEditorProps = {
   onAdd: (front: string, back: string) => void;
+  onUpdate?: (id: string, front: string, back: string) => void;
+  editingCard?: { id: string; front: string; back: string } | null;
+  onCancel?: () => void;
 };
 
-export function CardEditor({ onAdd }: CardEditorProps) {
-  const [front, setFront] = useState('');
-  const [back, setBack] = useState('');
+export function CardEditor({ onAdd, onUpdate, editingCard, onCancel }: CardEditorProps) {
+  const [front, setFront] = useState(editingCard?.front || '');
+  const [back, setBack] = useState(editingCard?.back || '');
   const { showToast } = useToast();
+
+  const isEditing = !!editingCard;
 
   const handleSubmit = () => {
     const f = front.trim();
     const b = back.trim();
     if (!f || !b) return;
     impact();
-    onAdd(f, b);
-    showToast({ message: 'Card added! Reverse card created.', type: 'success' });
+    if (isEditing && editingCard && onUpdate) {
+      onUpdate(editingCard.id, f, b);
+      showToast({ message: 'Card updated!', type: 'success' });
+    } else {
+      onAdd(f, b);
+      showToast({ message: 'Card added! Reverse card created.', type: 'success' });
+    }
     setFront('');
     setBack('');
+    onCancel?.();
   };
 
   return (
     <Card style={styles.card}>
-      <ThemedText type="smallBold">Add card</ThemedText>
+      <ThemedText type="smallBold">{isEditing ? 'Edit card' : 'Add card'}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        A reverse card will be created automatically.
+        {isEditing ? 'Changes will apply to this card only.' : 'A reverse card will be created automatically.'}
       </ThemedText>
       <Input
         placeholder="Front (question)"
@@ -50,7 +61,10 @@ export function CardEditor({ onAdd }: CardEditorProps) {
         onSubmitEditing={handleSubmit}
         style={styles.input}
       />
-      <Button title="Add card" onPress={handleSubmit} />
+      <Button title={isEditing ? 'Save changes' : 'Add card'} onPress={handleSubmit} />
+      {isEditing && onCancel && (
+        <Button title="Cancel" variant="ghost" onPress={onCancel} />
+      )}
     </Card>
   );
 }
