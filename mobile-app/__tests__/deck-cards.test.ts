@@ -109,6 +109,51 @@ describe('Card Reducer Logic', () => {
   });
 });
 
+describe('Edit Integration', () => {
+  it('updates only the specified card when editing', () => {
+    const initialState = createInitialState();
+    const deckId = 'test-deck';
+
+    // Add two cards
+    let state = reducer(initialState, { type: 'cards/add', deckId, front: 'Q1', back: 'A1' });
+    state = reducer(state, { type: 'cards/add', deckId, front: 'Q2', back: 'A2' });
+
+    // Find the original (non-reversed) cards
+    const originalCards = state.cards.filter(c => !c.isReversed);
+    expect(originalCards).toHaveLength(2);
+    const card1Id = originalCards[0].id;
+    const card2Id = originalCards[1].id;
+
+    // Update only the first original card
+    state = reducer(state, { type: 'cards/update', id: card1Id, front: 'Updated Q1', back: 'Updated A1' });
+
+    // Verify first card was updated
+    expect(state.cards.find(c => c.id === card1Id)?.front).toBe('Updated Q1');
+    expect(state.cards.find(c => c.id === card1Id)?.back).toBe('Updated A1');
+
+    // Verify second card was NOT updated
+    expect(state.cards.find(c => c.id === card2Id)?.front).toBe('Q2');
+    expect(state.cards.find(c => c.id === card2Id)?.back).toBe('A2');
+  });
+
+  it('does not create reverse card when updating', () => {
+    const initialState = createInitialState();
+    const deckId = 'test-deck';
+
+    // Add a card (creates 2 cards: original + reverse)
+    let state = reducer(initialState, { type: 'cards/add', deckId, front: 'Q', back: 'A' });
+    expect(state.cards.length).toBe(2);
+
+    const cardId = state.cards.find(c => !c.isReversed)?.id;
+
+    // Update the card
+    state = reducer(state, { type: 'cards/update', id: cardId!, front: 'Updated Q', back: 'Updated A' });
+
+    // Should still have only 2 cards (no new reverse created)
+    expect(state.cards.length).toBe(2);
+  });
+});
+
 describe('Navigation Logic', () => {
   it('getDueCards returns cards due for review for a specific deck', () => {
     const initialState = createInitialState();
