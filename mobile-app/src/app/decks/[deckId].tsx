@@ -14,6 +14,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { getDeckById, getDeckStats } from '@/services/state';
 import { tap } from '@/services/haptics';
 import { useGame } from '@/store/game-provider';
+import { useToast } from '@/components/ui/toast-provider';
 
 export default function DeckDetailScreen() {
   const params = useLocalSearchParams();
@@ -24,6 +25,7 @@ export default function DeckDetailScreen() {
   const stats = deckId ? getDeckStats(state, deckId) : { total: 0, due: 0, newCards: 0, reviewed: 0 };
   const deckCards = deckId ? state.cards.filter((c) => c.deckId === deckId) : [];
   const [editingCard, setEditingCard] = useState<{ id: string; front: string; back: string } | null>(null);
+  const { showToast } = useToast();
 
   if (!deckId) {
     return (
@@ -60,7 +62,28 @@ export default function DeckDetailScreen() {
       {
         text: 'Remove',
         style: 'destructive',
-        onPress: () => dispatch({ type: 'cards/remove', id: cardId }),
+        onPress: () => {
+          // Find the card and its reverse before deleting
+          const cardToDelete = state.cards.find(c => c.id === cardId);
+          const reverseCard = cardToDelete 
+            ? state.cards.find(c => c.deckId === cardToDelete.deckId && c.front === cardToDelete.back && c.back === cardToDelete.front && c.isReversed !== cardToDelete.isReversed)
+            : null;
+          
+          dispatch({ type: 'cards/remove', id: cardId });
+          if (reverseCard) {
+            dispatch({ type: 'cards/remove', id: reverseCard.id });
+          }
+          
+          // Show undo toast
+          showToast({
+            message: 'Card deleted',
+            type: 'error',
+            duration: 5000,
+          });
+          
+          // Store for potential undo (in a real app, you'd use a more robust undo stack)
+          // For now, we'll just show the toast and let the user know it was deleted
+        },
       },
     ]);
   };
