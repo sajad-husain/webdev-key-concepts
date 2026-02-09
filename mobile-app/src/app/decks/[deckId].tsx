@@ -9,6 +9,7 @@ import { AnimatedRow } from '@/components/ui/animated-row';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { CardEditor } from '@/components/ui/card-editor';
+import { ImportCardsModal } from '@/components/ui/import-cards-modal';
 import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getDeckById, getDeckStats } from '@/services/state';
@@ -25,6 +26,7 @@ export default function DeckDetailScreen() {
   const stats = deckId ? getDeckStats(state, deckId) : { total: 0, due: 0, newCards: 0, reviewed: 0 };
   const deckCards = deckId ? state.cards.filter((c) => c.deckId === deckId) : [];
   const [editingCard, setEditingCard] = useState<{ id: string; front: string; back: string } | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
   const { showToast } = useToast();
 
   if (!deckId) {
@@ -101,6 +103,17 @@ export default function DeckDetailScreen() {
     setEditingCard({ id: card.id, front: card.front, back: card.back });
   };
 
+  const handleImport = (cards: { front: string; back: string }[]) => {
+    for (const card of cards) {
+      dispatch({ type: 'cards/add', deckId: deckId!, front: card.front, back: card.back });
+    }
+    setShowImportModal(false);
+  };
+
+  const openImportModal = () => {
+    setShowImportModal(true);
+  };
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -120,6 +133,10 @@ export default function DeckDetailScreen() {
               onPress={() => router.push({ pathname: '/decks/review', params: { deckId } })}
             />
           )}
+        </ThemedView>
+
+        <ThemedView style={styles.actionRow}>
+          <Button title="Import Cards" variant="secondary" onPress={openImportModal} style={styles.importButton} />
         </ThemedView>
 
         <CardEditor
@@ -185,6 +202,13 @@ export default function DeckDetailScreen() {
             );
           }}
         />
+        {showImportModal && (
+          <ImportCardsModal
+            deckId={deckId}
+            onImport={handleImport}
+            onClose={() => setShowImportModal(false)}
+          />
+        )}
       </SafeAreaView>
     </ThemedView>
   );
@@ -251,5 +275,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.half,
     minHeight: 32,
+  },
+  actionRow: {
+    marginTop: Spacing.one,
+  },
+  importButton: {
+    width: '100%',
   },
 });
