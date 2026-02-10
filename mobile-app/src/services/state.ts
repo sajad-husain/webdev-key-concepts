@@ -166,6 +166,7 @@ export type GameAction =
   | { type: 'cards/add'; deckId: string; front: string; back: string }
   | { type: 'cards/remove'; id: string }
   | { type: 'cards/update'; id: string; front: string; back: string }
+  | { type: 'cards/importMany'; deckId: string; cards: { front: string; back: string }[] }
   | { type: 'review/submit'; cardId: string; grade: 0 | 1 | 2 | 3; xpEarned: number }
   | { type: 'reviewStreak/update'; date: string }
   | { type: 'reviewSession/save'; session: ReviewSession }
@@ -422,6 +423,19 @@ export function reducer(state: GameState, action: GameAction): GameState {
           c.id === action.id ? { ...c, front: action.front, back: action.back } : c,
         ),
       };
+
+    case 'cards/importMany': {
+      const now = todayKey();
+      const newCards: Card[] = [];
+      for (const card of action.cards) {
+        const [newCard, reverseCard] = createCardPair(action.deckId, card.front, card.back);
+        newCards.push(newCard, reverseCard);
+      }
+      return {
+        ...state,
+        cards: [...state.cards, ...newCards],
+      };
+    }
 
     case 'review/submit': {
       const now = new Date().toISOString();
