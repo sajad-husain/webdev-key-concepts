@@ -274,3 +274,87 @@ describe('Full Cycle E2E', () => {
     expect(state.reviewStreak.currentStreak).toBe(1);
   });
 });
+
+describe('Import Integration', () => {
+  it('imports multiple cards via cards/importMany action', () => {
+    const initialState = createInitialState();
+
+    // Add a deck first (reducer generates ID)
+    let state = reducer(initialState, { type: 'decks/add', name: 'Test Deck' });
+    const deck = state.decks[0];
+    const deckId = deck.id;
+
+    // Import multiple cards
+    const cardsToImport = [
+      { front: 'Import Q1', back: 'Import A1' },
+      { front: 'Import Q2', back: 'Import A2' },
+      { front: 'Import Q3', back: 'Import A3' },
+    ];
+
+    const newState = reducer(state, {
+      type: 'cards/importMany',
+      deckId,
+      cards: cardsToImport,
+    });
+
+    // Should have 6 cards (3 pairs with reverses)
+    expect(newState.cards.filter(c => c.deckId === deckId)).toHaveLength(6);
+
+    // Verify cards were created correctly
+    const importedFronts = newState.cards
+      .filter(c => c.deckId === deckId && !c.isReversed)
+      .map(c => c.front)
+      .sort();
+    expect(importedFronts).toEqual(['Import Q1', 'Import Q2', 'Import Q3']);
+
+    // Each should have a reverse
+    const originalCards = newState.cards.filter(c => c.deckId === deckId && !c.isReversed);
+    const reverseCards = newState.cards.filter(c => c.deckId === deckId && c.isReversed);
+    expect(originalCards.length).toBe(3);
+    expect(reverseCards.length).toBe(3);
+  });
+
+  it('imports cards with empty array (no-op)', () => {
+    const initialState = createInitialState();
+    let state = reducer(initialState, { type: 'decks/add', name: 'Test Deck' });
+    const deck = state.decks[0];
+    const deckId = deck.id;
+
+    const newState = reducer(state, {
+      type: 'cards/importMany',
+      deckId,
+      cards: [],
+    });
+
+    // Should not add any cards
+    expect(newState.cards.filter(c => c.deckId === deckId)).toHaveLength(0);
+  });
+
+  it('import works correctly with special characters and quotes', () => {
+    let state = createInitialState();
+    state = reducer(state, { type: 'decks/add', name: 'Test Deck' });
+    const deck = state.decks[0];
+    const deckId = deck.id;
+
+    const cardsToImport = [
+      { front: 'Question with "quotes"', back: 'Answer with "quotes"' },
+      { front: 'Question, with comma', back: 'Answer, with comma' },
+    ];
+
+    const newState = reducer(state, {
+      type: 'cards/importMany',
+      deckId,
+      cards: [
+        { front: 'Question with "quotes"', back: 'Answer with "quotes"' },
+        { front: 'Question, with comma', back: 'Answer, with comma' },
+      ],
+    });
+
+    const importedCards = newState.cards.filter(c => c.deckId === deckId && !c.isReversed);
+    expect(importedCards.length).toBe(2);
+    expect(importedCards[0].front).toBe('Question with "quotes"');
+    expect(importedCards[0].back).toBe('Answer with "quotes"');
+    expect(importedCards[1].front).toBe('Question, with comma');
+    expect(importedCards[1].back).toBe('Answer, with comma');
+  });
+});
