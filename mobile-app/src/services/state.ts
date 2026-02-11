@@ -117,6 +117,15 @@ export type ReviewStreak = {
   lastReviewDate: string | null;
 };
 
+export type ImportHistoryEntry = {
+  id: string;
+  deckId: string;
+  deckName: string;
+  cardCount: number;
+  importedAt: string;
+  cardIds: string[];
+};
+
 export type ReviewSession = {
   deckId: string | null;
   currentIndex: number;
@@ -142,6 +151,7 @@ export type GameState = {
   reviewLogs: ReviewLog[];
   reviewStreak: ReviewStreak;
   reviewSession: ReviewSession;
+  importHistory: ImportHistoryEntry[];
 };
 
 export type GameAction =
@@ -170,7 +180,9 @@ export type GameAction =
   | { type: 'review/submit'; cardId: string; grade: 0 | 1 | 2 | 3; xpEarned: number }
   | { type: 'reviewStreak/update'; date: string }
   | { type: 'reviewSession/save'; session: ReviewSession }
-  | { type: 'reviewSession/clear' };
+  | { type: 'reviewSession/clear' }
+  | { type: 'importHistory/add'; entry: ImportHistoryEntry }
+  | { type: 'importHistory/rollback'; importId: string };
 
 export function createInitialState(): GameState {
   return {
@@ -185,6 +197,7 @@ export function createInitialState(): GameState {
     reviewLogs: [],
     reviewStreak: { currentStreak: 0, longestStreak: 0, lastReviewDate: null },
     reviewSession: { deckId: null, currentIndex: 0, gradeLog: [], startedAt: null },
+    importHistory: [],
   };
 }
 
@@ -505,6 +518,28 @@ export function reducer(state: GameState, action: GameAction): GameState {
         reviewSession: { deckId: null, currentIndex: 0, gradeLog: [], startedAt: null },
       };
 
+    case 'importHistory/add':
+      return {
+        ...state,
+        importHistory: [...state.importHistory, action.entry],
+      };
+
+    case 'importHistory/rollback': {
+      const importEntry = state.importHistory.find(e => e.id === action.importId);
+      if (!importEntry) {
+        return state;
+      }
+      // Remove the cards from this import
+      const remainingCards = state.cards.filter(c => !importEntry.cardIds.includes(c.id));
+      // Remove the import history entry
+      const remainingHistory = state.importHistory.filter(e => e.id !== action.importId);
+      return {
+        ...state,
+        cards: remainingCards,
+        importHistory: remainingHistory,
+      };
+    }
+
     default:
       return state;
   }
@@ -694,6 +729,9 @@ export function sanitizeState(input: unknown): GameState {
     reviewLogs,
     reviewStreak: toReviewStreak(input.reviewStreak),
     reviewSession: toReviewSession(input.reviewSession),
+    importHistory: Array.isArray(input.importHistory)
+      ? input.importHistory.map(toImportHistoryEntry).filter((e): e is ImportHistoryEntry => e !== null)
+      : [],
   };
 }
 
@@ -776,6 +814,22 @@ function toReviewSession(value: unknown): ReviewSession {
     currentIndex: toFiniteNumber(value.currentIndex),
     gradeLog,
     startedAt: typeof value.startedAt === 'string' ? value.startedAt : null,
+  };
+}
+
+function toImportHistoryEntry(value: unknown): ImportHistoryEntry | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  return {
+    id: typeof value.id === 'string' ? value.id : '',
+    deckId: typeof value.deckId === 'string' ? value.deckId : '',
+    deckName: typeof value.deckName === 'string' ? value.deckName : '',
+    cardCount: toFiniteNumber(value.cardCount),
+    importedAt: typeof value.importedAt === 'string' ? value.importedAt : '',
+    cardIds: Array.isArray(value.cardIds)
+      ? value.cardIds.filter((id): id is string => typeof id === 'string')
+      : [],
   };
 }
 
