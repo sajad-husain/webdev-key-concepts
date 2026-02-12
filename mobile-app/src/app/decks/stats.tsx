@@ -8,6 +8,11 @@ import { Card } from '@/components/ui/card';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useGame } from '@/store/game-provider';
 import { getDeckById, getDeckReviewStats } from '@/services/state';
+import { BarChart, LineChart } from 'react-native-chart-kit';
+import { Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
+const CHART_WIDTH = width * 0.9;
 
 export default function ReviewStatsScreen() {
   const params = useLocalSearchParams<{ deckId?: string }>();
@@ -43,9 +48,22 @@ export default function ReviewStatsScreen() {
   const goodReviews = gradeCounts[2] + gradeCounts[3];
   const retention = totalReviews > 0 ? Math.round((goodReviews / totalReviews) * 100) : 0;
 
-  const gradeNames = ['Again', 'Hard', 'Good', 'Easy'];
-  
-  const title = deck ? `${deck.name} Statistics` : 'Review Statistics';
+const gradeNames = ['Again', 'Hard', 'Good', 'Easy'];
+   
+   const title = deck ? `${deck.name} Statistics` : 'Review Statistics';
+
+   // Reviews per day for the last 14 days
+   const today = new Date();
+   const last14DaysLabels: string[] = [];
+   const reviewsPerDay: number[] = [];
+   for (let i = 13; i >= 0; i--) {
+     const date = new Date(today);
+     date.setDate(date.getDate() - i);
+     const dateStr = date.toISOString().slice(0, 10);
+     last14DaysLabels.push(date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }));
+     const dayLogs = deckLogs.filter(l => l.reviewedAt.startsWith(dateStr));
+     reviewsPerDay.push(dayLogs.length);
+   }
 
   return (
     <ThemedView style={styles.container}>
@@ -79,62 +97,107 @@ export default function ReviewStatsScreen() {
 
         <Card style={styles.sectionCard}>
           <ThemedText type="smallBold">Grade Distribution</ThemedText>
-          <FlatList
-            data={gradeNames}
-            keyExtractor={(item) => item}
-            renderItem={({ item, index }) => {
-              const count = gradeCounts[index];
-              const percentage = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
-              const color =
-                index === 0 ? 'danger' : index === 1 ? 'textSecondary' : index === 2 ? 'success' : 'gold';
-              return (
-                <ThemedView style={styles.distRow} key={item}>
-                  <ThemedText type="small" themeColor={color as any}>{item}</ThemedText>
-                  <ThemedView style={styles.distBar}>
-                    <ThemedView
-                      style={[
-                        styles.distBarFill,
-                        { backgroundColor: color === 'danger' ? '#EF4444' : color === 'textSecondary' ? '#6B7280' : color === 'success' ? '#22C55E' : '#EAB308' },
-                        { width: `${percentage}%` },
-                      ]}
-                    />
-                  </ThemedView>
-                  <ThemedText type="small" themeColor="textSecondary" style={styles.distLabel}>
-                    {count} ({percentage}%)
-                  </ThemedText>
-                </ThemedView>
-              );
-            }}
-          />
+          {totalReviews > 0 ? (
+            <BarChart
+              data={{
+                labels: gradeNames,
+                datasets: [
+                  {
+                    data: gradeCounts,
+                    color: (opacity = 1) => `rgba(239, 68, 68, ${opacity})`,
+                  },
+                ],
+              }}
+              width={CHART_WIDTH}
+              height={220}
+              yAxisLabel="Reviews"
+              yAxisSuffix=""
+              chartConfig={{
+                backgroundColor: 'transparent',
+                backgroundGradientFrom: 'transparent',
+                backgroundGradientTo: 'transparent',
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                style: {
+                  borderRadius: 16,
+                },
+              }}
+            />
+          ) : (
+            <ThemedText type="small" themeColor="textSecondary" style={styles.emptyChart}>
+              No reviews yet to show distribution
+            </ThemedText>
+          )}
         </Card>
 
         <Card style={styles.sectionCard}>
           <ThemedText type="smallBold">Ease Factor Distribution</ThemedText>
-          <FlatList
-            data={Object.entries(easeBins)}
-            keyExtractor={([key]) => key}
-            renderItem={({ item }) => {
-              const [range, count] = item;
-              const percentage = state.cards.length > 0 ? Math.round((count / state.cards.length) * 100) : 0;
-              return (
-                <ThemedView style={styles.distRow} key={range}>
-                  <ThemedText type="small">Ease {range}</ThemedText>
-                  <ThemedView style={styles.distBar}>
-                    <ThemedView
-                      style={[
-                        styles.distBarFill,
-                        { backgroundColor: '#3B82F6' },
-                        { width: `${percentage}%` },
-                      ]}
-                    />
-                  </ThemedView>
-                  <ThemedText type="small" themeColor="textSecondary" style={styles.distLabel}>
-                    {count} ({percentage}%)
-                  </ThemedText>
-                </ThemedView>
-              );
-            }}
-          />
+          {Object.values(easeBins).some(v => v > 0) ? (
+            <BarChart
+              data={{
+                labels: Object.keys(easeBins),
+                datasets: [
+                  {
+                    data: Object.values(easeBins),
+                    color: (opacity = 1) => `rgba(239, 68, 68, ${opacity})`,
+                  },
+                ],
+              }}
+              width={CHART_WIDTH}
+              height={220}
+              yAxisLabel="Cards"
+              yAxisSuffix=""
+              chartConfig={{
+                backgroundColor: 'transparent',
+                backgroundGradientFrom: 'transparent',
+                backgroundGradientTo: 'transparent',
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                style: {
+                  borderRadius: 16,
+                },
+              }}
+            />
+          ) : (
+            <ThemedText type="small" themeColor="textSecondary" style={styles.emptyChart}>
+              No cards yet to show ease distribution
+            </ThemedText>
+          )}
+        </Card>
+
+        <Card style={styles.sectionCard}>
+          <ThemedText type="smallBold">Reviews Over Time (Last 14 Days)</ThemedText>
+          {deckLogs.length > 0 ? (
+            <LineChart
+              data={{
+                labels: last14DaysLabels,
+                datasets: [
+                  {
+                    data: reviewsPerDay,
+                    color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
+                    strokeWidth: 2,
+                  },
+                ],
+              }}
+              width={CHART_WIDTH}
+              height={220}
+              chartConfig={{
+                backgroundColor: 'transparent',
+                backgroundGradientFrom: 'transparent',
+                backgroundGradientTo: 'transparent',
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
+                style: {
+                  borderRadius: 16,
+                },
+              }}
+              bezier
+            />
+          ) : (
+            <ThemedText type="small" themeColor="textSecondary" style={styles.emptyChart}>
+              No reviews yet to show trend
+            </ThemedText>
+          )}
         </Card>
 
         <Card style={styles.sectionCard}>
@@ -231,5 +294,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.half,
     borderRadius: Spacing.one,
+  },
+  emptyChart: {
+    textAlign: 'center',
+    paddingVertical: Spacing.four,
   },
 });
