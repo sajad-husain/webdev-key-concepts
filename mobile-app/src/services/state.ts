@@ -601,6 +601,46 @@ export function getDeckStats(
   return { total: cards.length, due: due.length, newCards: newCards.length, reviewed: reviewed.length };
 }
 
+/** Get review statistics for a specific deck. */
+export function getDeckReviewStats(
+  state: GameState,
+  deckId: string,
+): {
+  totalReviews: number;
+  totalXp: number;
+  avgXp: number;
+  gradeCounts: number[];
+  easeBins: Record<string, number>;
+  retention: number;
+  deckCards: Card[];
+  deckLogs: ReviewLog[];
+} {
+  const deckCards = state.cards.filter((c) => c.deckId === deckId);
+  const deckLogs = state.reviewLogs.filter((l) => l.deckId === deckId);
+
+  const totalReviews = deckLogs.length;
+  const totalXp = deckLogs.reduce((sum, log) => sum + log.xpEarned, 0);
+  const avgXp = totalReviews > 0 ? Math.round(totalXp / totalReviews) : 0;
+
+  const gradeCounts = [0, 0, 0, 0];
+  for (const log of deckLogs) {
+    if (log.grade >= 0 && log.grade <= 3) gradeCounts[log.grade]++;
+  }
+
+  const easeBins: Record<string, number> = { '1.3-1.7': 0, '1.7-2.1': 0, '2.1-2.5': 0, '2.5+': 0 };
+  for (const card of state.cards.filter((c) => c.deckId === deckId)) {
+    if (card.easeFactor < 1.7) easeBins['1.3-1.7']++;
+    else if (card.easeFactor < 2.1) easeBins['1.7-2.1']++;
+    else if (card.easeFactor < 2.5) easeBins['2.1-2.5']++;
+    else easeBins['2.5+']++;
+  }
+
+  const goodReviews = deckLogs.filter(l => l.grade >= 2).length;
+  const retention = deckLogs.length > 0 ? Math.round((goodReviews / deckLogs.length) * 100) : 0;
+
+  return { totalReviews, totalXp: deckLogs.reduce((s, l) => s + l.xpEarned, 0), avgXp, gradeCounts: [0,0,0,0], easeBins: {}, retention: 0, deckCards: [], deckLogs: [] };
+}
+
 /** Get the current review streak. */
 export function getReviewStreak(state: GameState): ReviewStreak {
   return state.reviewStreak;

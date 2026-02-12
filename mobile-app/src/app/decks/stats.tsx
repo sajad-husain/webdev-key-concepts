@@ -1,28 +1,38 @@
 import { FlatList, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Card } from '@/components/ui/card';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useGame } from '@/store/game-provider';
+import { getDeckById, getDeckReviewStats } from '@/services/state';
 
 export default function ReviewStatsScreen() {
+  const params = useLocalSearchParams<{ deckId?: string }>();
+  const deckId = params?.deckId as string | undefined;
   const { state } = useGame();
 
-  const totalReviews = state.reviewLogs.length;
-  const totalXp = state.reviewLogs.reduce((sum, log) => sum + log.xpEarned, 0);
+  const deck = deckId ? getDeckById(state, deckId) : null;
+  getDeckReviewStats(state, deckId!);
+
+  const deckCards = deckId ? state.cards.filter(c => c.deckId === deckId) : state.cards;
+  const deckLogs = deckId ? state.reviewLogs.filter(l => l.deckId === deckId) : state.reviewLogs;
+  
+  const totalReviews = deckLogs.length;
+  const totalXp = deckLogs.reduce((sum, log) => sum + log.xpEarned, 0);
   const avgXp = totalReviews > 0 ? Math.round(totalXp / totalReviews) : 0;
 
   // Grade distribution
   const gradeCounts = [0, 0, 0, 0];
-  for (const log of state.reviewLogs) {
+  for (const log of deckLogs) {
     if (log.grade >= 0 && log.grade <= 3) gradeCounts[log.grade]++;
   }
 
-  // Ease factor distribution
+  // Ease factor distribution (only for cards in this deck)
   const easeBins = { '1.3-1.7': 0, '1.7-2.1': 0, '2.1-2.5': 0, '2.5+': 0 };
-  for (const card of state.cards) {
+  for (const card of deckCards) {
     if (card.easeFactor < 1.7) easeBins['1.3-1.7']++;
     else if (card.easeFactor < 2.1) easeBins['1.7-2.1']++;
     else if (card.easeFactor < 2.5) easeBins['2.1-2.5']++;
@@ -34,12 +44,19 @@ export default function ReviewStatsScreen() {
   const retention = totalReviews > 0 ? Math.round((goodReviews / totalReviews) * 100) : 0;
 
   const gradeNames = ['Again', 'Hard', 'Good', 'Easy'];
+  
+  const title = deck ? `${deck.name} Statistics` : 'Review Statistics';
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <Card style={styles.summaryCard}>
-          <ThemedText type="subtitle">Review Statistics</ThemedText>
+          <ThemedText type="subtitle">{title}</ThemedText>
+          {deck && (
+            <ThemedText type="small" themeColor="textSecondary">
+              {deck.description}
+            </ThemedText>
+          )}
           <ThemedView style={styles.statsGrid}>
             <ThemedView style={styles.statBox}>
               <ThemedText type="small" themeColor="textSecondary">Total Reviews</ThemedText>
