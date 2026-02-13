@@ -105,3 +105,39 @@ mobile-app/
   build with the permissions baked in.
 - `addNotificationReceivedListener` fires while the app is foregrounded — handy
   for the in-app alarm overlay (`src/app/routines.tsx`).
+
+## Flashcard Decks (Spaced Repetition)
+
+- **Algorithm**: SM-2 (Anki classic) with independent scheduling for reverse cards
+- **Card format**: Basic + Reversed (auto-create reverse cards)
+- **XP**: Base 3 XP + grade bonus (Again=0, Hard=1, Good=2, Easy=4) + daily streak bonus (capped at +5)
+- **Session**: All due cards reviewed in a full-screen session with flip animation, grade buttons, XP summary
+- **Persistence**: Review logs, streak, and session state persisted via AsyncStorage
+- **Notifications**: Daily review reminder at configurable time (default 20:00)
+- **Import/Export**: Full deck/card/review state included in Settings backup/restore
+- **Statistics**: Per-deck stats screen with grade distribution, ease factor distribution, reviews-over-time chart, retention rate
+- **Session pause/resume**: Session state persisted across app backgrounding
+- **Review streak**: Daily streak badge on Home and Decks tab with celebration haptic
+- **Error handling**: ErrorBoundary wraps review session; route-level error.tsx boundary
+
+## Recent commits (2026-01-22 → 2026-02-12)
+
+| Date | Commit | Description |
+|------|--------|-------------|
+| 2026-01-22 | 6983927 | feat: add Card, Deck, ReviewLog, ReviewStreak types to state |
+| 2026-01-22 | 1433119 | feat: add SM-2 algorithm to gamification with tests |
+| 2026-01-23 | 9be007b | feat: add deck/card/review actions to reducer |
+| 2026-01-23 | 34fa266 | feat: add deck/card query helpers to state |
+| 2026-01-24 | 52a6241 | feat: add Decks tab to app-tabs with placeholder screen |
+| 2026-01-24 | 604cccf | feat: decks list screen with due counts and DeckCard component |
+| 2026-01-25 | 01a7cf4 | feat: deck detail screen with card management and CardEditor |
+| 2026-01-26 | 199f473 | feat: review session with card flip, grade buttons, and session end |
+| 2026-01-26 | b9aa79f | feat: review summary screen with XP breakdown |
+| 2026-01-27 | 12c940e | feat: review session pause/resume persistence |
+| 2026-01-27 | 7be3a9c | feat: daily review streak badge on Home and Decks |
+| 2026-01-28 | 887fb8f | feat: daily review reminder notification |
+| 2026-01-29 | 4f8eb9d | test: add import integration tests for bulk card import |
+| 2026-02-08 | 2f41caa | feat: add import history tracking and rollback functionality |
+| 2026-02-12 | a2727ed | feat: add deckId param to stats route with per-deck statistics |
+| 2026-02-12 | d13b58d | feat: build deck stats UI with BarChart and LineChart |
+| 2026-02-13 | (next) | feat: add time-range selector to stats screen |

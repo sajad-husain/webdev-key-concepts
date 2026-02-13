@@ -1,9 +1,9 @@
 # Life's a game
 
 A small Expo (React Native) + TypeScript app that treats everyday life like a
-game — earn XP for quests, goals, routines and daily wins, then watch your
-level and streak grow. Built as a companion project to the `webdev-key-concepts`
-full-stack backend course.
+game — earn XP for quests, goals, routines, daily wins, and flashcard reviews,
+then watch your level and streak grow. Built as a companion project to the
+`webdev-key-concepts` full-stack backend course.
 
 ## What it does
 
@@ -20,6 +20,10 @@ full-stack backend course.
   level. Export/import your game data as JSON and reset when needed.
 - **Guide** — how-to-play screen explaining the XP loop, habits, streaks and
   the level table.
+- **Decks** — spaced-repetition flashcards (SM-2 algorithm) with independent
+  scheduling for reverse cards. Review sessions with card flip animation,
+  4-grade buttons (Again/Hard/Good/Easy), XP rewards, streak tracking,
+  pause/resume, and statistics.
 
 ## Tech stack
 
@@ -33,6 +37,7 @@ full-stack backend course.
 | Reminders     | `expo-notifications` local daily notifications     |
 | Native picker | `@react-native-community/datetimepicker`           |
 | Import/backup | `expo-document-picker` + `Share`                   |
+| Charts        | `react-native-chart-kit` + `react-native-svg`      |
 | Animation     | `react-native-reanimated` (reduce-motion aware)    |
 | API           | built-in `fetch` via a small typed API client      |
 | Testing       | Jest + jest-expo                                   |
@@ -79,15 +84,24 @@ mobile-app/
 │   │   ├── routines.tsx# Routines tab (daily habits + native time picker)
 │   │   ├── settings.tsx# Wins tab (daily wins log + backup/restore/reset)
 │   │   ├── guide.tsx   # Guide tab (how-to-play + XP table)
-│   │   └── error.tsx   # Route-level error boundary
-│   ├── components/     # ThemedText/ThemedView, error-boundary, app tabs, ui/ (Button, Card, Input, ProgressBar, LevelUpBanner…)
-│   ├── constants/      # theme tokens (Colors, Spacing, Radius, Fonts)
-│   ├── hooks/          # color scheme + theme hooks
-│   ├── services/       # storage, api, gamification, state reducer, notifications, haptics
-│   ├── store/          # game context provider (hydration + persistence + level-up detection)
-│   ├── types/          # ambient type declarations (CSS modules)
-│   └── global.css      # web font variables
-└── __tests__/          # Jest unit tests (gamification, streak math, storage, api)
+│   │   ├── decks/      # Decks tab (flashcards + SM-2 SRS)
+│   │   │   ├── index.tsx       # Decks list + due counts + create/edit
+  │   │   ├── [deckId].tsx      # Deck detail + card management + review CTA
+  │   │   ├── review.tsx        # Review session (flip, grade, XP)
+  │   │   ├── summary.tsx       # Review summary (XP breakdown)
+  │   │   ├── stats.tsx         # Per-deck statistics (charts)
+  │   │   └── review.tsx        # Review session (flip, grade, XP)
+  │   │   └── summary.tsx       # Review summary (XP breakdown)
+  │   ├── error.tsx     # Route-level error boundary
+  │   ├── components/     # ThemedText/ThemedView, error-boundary, app tabs, ui/ (Button, Card, Input, ProgressBar, LevelUpBanner, DeckCard, CardEditor, ReviewProgress, GradeButtons, ImportCardsModal…)
+  │   ├── constants/      # theme tokens (Colors, Spacing, Radius, Fonts)
+  │   ├── hooks/          # color scheme + theme hooks
+  │   ├── services/       # storage, api, gamification, state reducer, notifications, haptics, csv-parser
+  │   ├── store/          # game context provider (hydration + persistence + level-up detection)
+  │   ├── types/          # ambient type declarations (CSS modules)
+  │   └── global.css      # web font variables
+└── __tests__/          # Jest unit tests (gamification, streak math, storage, api, deck/card/review)
+└── docs/               # architecture notes
 ```
 
 ## Testing
@@ -97,10 +111,10 @@ npm test
 ```
 
 Covers the pure service modules: the gamification engine (levels, streak math,
-date helpers, level-up detection, week-days selector), state serialization and
-sanitization, the AsyncStorage wrapper, and the API client (parsing and error
-handling). See [`docs/architecture.md`](docs/architecture.md) for how the pieces
-fit together.
+date helpers, level-up detection, week-days selector, SM-2 algorithm), state
+serialization and sanitization, CSV parsing, import/export, the AsyncStorage
+wrapper, and the API client (parsing and error handling). See
+[`docs/architecture.md`](docs/architecture.md) for how the pieces fit together.
 
 ## Roadmap (2026)
 
@@ -124,3 +138,14 @@ fit together.
 - [x] Quick log-win chips + quick-add quest on Home
 - [x] Per-quest XP picker (5/20/50)
 - [x] Route-level error boundary + reusable ErrorBoundary
+- [x] Flashcard decks (SM-2 SRS) with reverse cards
+- [x] Review session (flip, grade, XP, streak, pause/resume)
+- [x] Deck statistics (grade/ease distribution, retention, trend chart)
+- [x] Daily review reminder notification
+- [x] Import/export/rollback for deck data
+- [ ] Time-range selector on stats screen
+- [ ] Review streak heatmap calendar
+- [ ] Share stats as image
+- [ ] Previous period comparison
+- [ ] Duplicate card detection on import
+- [ ] Card tags/folders
