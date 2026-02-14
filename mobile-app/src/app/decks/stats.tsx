@@ -1,69 +1,135 @@
-import { FlatList, StyleSheet } from 'react-native';
+import { FlatList, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState, useMemo } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useGame } from '@/store/game-provider';
-import { getDeckById, getDeckReviewStats } from '@/services/state';
+import { getDeckById } from '@/services/state';
 import { BarChart, LineChart } from 'react-native-chart-kit';
-import { Dimensions } from 'react-native';
+import { filterLogsByRange, type StatsRange } from '@/services/gamification';
 
 const { width } = Dimensions.get('window');
 const CHART_WIDTH = width * 0.9;
+
+const timeRanges: { value: StatsRange; label: string }[] = [
+  { value: '7d', label: '7 Days' },
+  { value: '30d', label: '30 Days' },
+  { value: '90d', label: '90 Days' },
+  { value: 'all', label: 'All Time' },
+];
+
+const gradeNames = ['Again', 'Hard', 'Good', 'Easy'];
 
 export default function ReviewStatsScreen() {
   const params = useLocalSearchParams<{ deckId?: string }>();
   const deckId = params?.deckId as string | undefined;
   const { state } = useGame();
+  const [timeRange, setTimeRange] = useState<StatsRange>('30d');
 
   const deck = deckId ? getDeckById(state, deckId) : null;
-  getDeckReviewStats(state, deckId!);
 
-  const deckCards = deckId ? state.cards.filter(c => c.deckId === deckId) : state.cards;
-  const deckLogs = deckId ? state.reviewLogs.filter(l => l.deckId === deckId) : state.reviewLogs;
-  
-  const totalReviews = deckLogs.length;
-  const totalXp = deckLogs.reduce((sum, log) => sum + log.xpEarned, 0);
+  const deckCards = deckId ? state.cards.filter((c) => c.deckId === deckId) : state.cards;
+  const deckLogs = deckId ? state.reviewLogs.filter((l) => l.deckId === deckId) : state.reviewLogs;
+
+  const filteredLogs = useMemo(() => filterLogsByRange(deckLogs, timeRange), [deckLogs, timeRange]);
+
+  const totalReviews = filteredLogs.length;
+  const totalXp = filteredLogs.reduce((sum, log) => sum + log.xpEarned, 0);
   const avgXp = totalReviews > 0 ? Math.round(totalXp / totalReviews) : 0;
 
-  // Grade distribution
-  const gradeCounts = [0, 0, 0, 0];
-  for (const log of deckLogs) {
-    if (log.grade >= 0 && log.grade <= 3) gradeCounts[log.grade]++;
-  }
+  const gradeCounts = useMemo(() => {
+    const counts = [0, 0, 0, 0];
+    for (const log of filteredLogs) {
+      if (log.grade >= 0 && log.grade <= 3) counts[log.grade]++;
+    }
+    return counts;
+  }, [filteredLogs]);
 
-  // Ease factor distribution (only for cards in this deck)
-  const easeBins = { '1.3-1.7': 0, '1.7-2.1': 0, '2.1-2.5': 0, '2.5+': 0 };
-  for (const card of deckCards) {
-    if (card.easeFactor < 1.7) easeBins['1.3-1.7']++;
-    else if (card.easeFactor < 2.1) easeBins['1.7-2.1']++;
-    else if (card.easeFactor < 2.5) easeBins['2.1-2.5']++;
-    else easeBins['2.5+']++;
-  }
+  const easeBins = useMemo(() => {
+    const bins = { '1.3-1.7': 0, '1.7-2.1': 0, '2.1-2.5': 0, '2.5+': 0 };
+    for (const card of deckCards) {
+      if (card.easeFactor < 1.7) bins['1.3-1.7']++;
+      else if (card.easeFactor < 2.1) bins['1.7-2.1']++;
+      else if (card.easeFactor < 2.5) bins['2.1-2.5']++;
+      else bins['2.5+']++;
+    }
+    return bins;
+  }, [deckCards]);
 
-  // Retention rate (Good + Easy / total reviews)
   const goodReviews = gradeCounts[2] + gradeCounts[3];
   const retention = totalReviews > 0 ? Math.round((goodReviews / totalReviews) * 100) : 0;
 
-const gradeNames = ['Again', 'Hard', 'Good', 'Easy'];
-   
-   const title = deck ? `${deck.name} Statistics` : 'Review Statistics';
+  const title = deck ? `${deck.name} Statistics` : 'Review Statistics';
 
-   // Reviews per day for the last 14 days
-   const today = new Date();
-   const last14DaysLabels: string[] = [];
-   const reviewsPerDay: number[] = [];
-   for (let i = 13; i >= 0; i--) {
-     const date = new Date(today);
-     date.setDate(date.getDate() - i);
-     const dateStr = date.toISOString().slice(0, 10);
-     last14DaysLabels.push(date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }));
-     const dayLogs = deckLogs.filter(l => l.reviewedAt.startsWith(dateStr));
-     reviewsPerDay.push(dayLogs.length);
-   }
+  const chartData = useMemo(() => {
+    const today = new Date();
+
+    let daysBack: number;
+    let bucketSize: number;
+    let formatLabel: (date: Date) => string;
+
+    switch (timeRange) {
+      case '7d':
+        daysBack = 6;
+        bucketSize = 1;
+        formatLabel = (d) => d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        break;
+      case '30d':
+        daysBack = 29;
+        bucketSize = 1;
+        formatLabel = (d) => d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        break;
+      case '90d':
+        daysBack = 89;
+        bucketSize = 7;
+        formatLabel = (d) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        break;
+      case 'all':
+        if (deckLogs.length === 0) {
+          return { labels: [], data: [] };
+        }
+        const oldestLog = new Date(Math.min(...deckLogs.map((l) => new Date(l.reviewedAt).getTime())));
+        const diffDays = Math.ceil((today.getTime() - oldestLog.getTime()) / (1000 * 60 * 60 * 24));
+        daysBack = diffDays;
+        bucketSize = Math.max(1, Math.ceil(daysBack / 30));
+        formatLabel = (d) => d.toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+        break;
+    }
+
+    const numBuckets = Math.ceil((daysBack + 1) / bucketSize);
+    const labels: string[] = [];
+    const data: number[] = [];
+
+    for (let i = numBuckets - 1; i >= 0; i--) {
+      const bucketEnd = new Date(today);
+      bucketEnd.setDate(today.getDate() - i * bucketSize);
+      const bucketStart = new Date(bucketEnd);
+      bucketStart.setDate(bucketEnd.getDate() - bucketSize + 1);
+
+      labels.push(formatLabel(bucketEnd));
+
+      const startKey = bucketStart.toISOString().slice(0, 10);
+      const endKey = bucketEnd.toISOString().slice(0, 10);
+
+      const bucketLogs = deckLogs.filter((l) => {
+        const logDate = l.reviewedAt.slice(0, 10);
+        return logDate >= startKey && logDate <= endKey;
+      });
+      data.push(bucketLogs.length);
+    }
+
+    return { labels, data };
+  }, [deckLogs, timeRange]);
+
+  const recentLogs = useMemo(
+    () => state.reviewLogs.slice(-10).reverse(),
+    [state.reviewLogs]
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -75,6 +141,17 @@ const gradeNames = ['Again', 'Hard', 'Good', 'Easy'];
               {deck.description}
             </ThemedText>
           )}
+          <ThemedView style={styles.timeRangeSelector}>
+            {timeRanges.map((range) => (
+              <Button
+                key={range.value}
+                title={range.label}
+                variant={timeRange === range.value ? 'primary' : 'ghost'}
+                style={styles.timeRangeButton}
+                onPress={() => setTimeRange(range.value)}
+              />
+            ))}
+          </ThemedView>
           <ThemedView style={styles.statsGrid}>
             <ThemedView style={styles.statBox}>
               <ThemedText type="small" themeColor="textSecondary">Total Reviews</ThemedText>
@@ -132,7 +209,7 @@ const gradeNames = ['Again', 'Hard', 'Good', 'Easy'];
 
         <Card style={styles.sectionCard}>
           <ThemedText type="smallBold">Ease Factor Distribution</ThemedText>
-          {Object.values(easeBins).some(v => v > 0) ? (
+          {Object.values(easeBins).some((v) => v > 0) ? (
             <BarChart
               data={{
                 labels: Object.keys(easeBins),
@@ -166,14 +243,14 @@ const gradeNames = ['Again', 'Hard', 'Good', 'Easy'];
         </Card>
 
         <Card style={styles.sectionCard}>
-          <ThemedText type="smallBold">Reviews Over Time (Last 14 Days)</ThemedText>
-          {deckLogs.length > 0 ? (
+          <ThemedText type="smallBold">Reviews Over Time</ThemedText>
+          {chartData.data.some((v) => v > 0) ? (
             <LineChart
               data={{
-                labels: last14DaysLabels,
+                labels: chartData.labels,
                 datasets: [
                   {
-                    data: reviewsPerDay,
+                    data: chartData.data,
                     color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
                     strokeWidth: 2,
                   },
@@ -206,15 +283,20 @@ const gradeNames = ['Again', 'Hard', 'Good', 'Easy'];
             <ThemedText type="small" themeColor="textSecondary">No reviews yet.</ThemedText>
           ) : (
             <FlatList
-              data={state.reviewLogs.slice(-10).reverse()}
+              data={recentLogs}
               keyExtractor={(log) => log.id}
               renderItem={({ item }) => {
                 const date = new Date(item.reviewedAt);
                 const dateStr = date.toLocaleDateString();
-                const gradeNames = ['Again', 'Hard', 'Good', 'Easy'];
                 const grade = gradeNames[item.grade];
                 const color =
-                  item.grade === 0 ? 'danger' : item.grade === 1 ? 'textSecondary' : item.grade === 2 ? 'success' : 'gold';
+                  item.grade === 0
+                    ? 'danger'
+                    : item.grade === 1
+                    ? 'textSecondary'
+                    : item.grade === 2
+                    ? 'success'
+                    : 'gold';
                 return (
                   <ThemedView style={styles.logRow} key={item.id}>
                     <ThemedText type="small" themeColor="textSecondary">{dateStr}</ThemedText>
@@ -248,6 +330,16 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     gap: Spacing.two,
+  },
+  timeRangeSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    marginTop: Spacing.two,
+  },
+  timeRangeButton: {
+    flex: 1,
+    minWidth: 80,
   },
   statsGrid: {
     flexDirection: 'row',
