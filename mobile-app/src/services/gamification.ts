@@ -152,3 +152,32 @@ export function sm2NextReview(
 export function calculateReviewXp(grade: ReviewGrade, streak: number): number {
   return REVIEW_BASE_XP + REVIEW_GRADE_BONUS[grade] + Math.min(streak, STREAK_BONUS_CAP);
 }
+
+export type StatsRange = '7d' | '30d' | '90d' | 'all';
+
+export type ReviewLog = {
+  id: string;
+  cardId: string;
+  deckId: string;
+  grade: 0 | 1 | 2 | 3;
+  reviewedAt: string;
+  xpEarned: number;
+  easeFactor: number;
+  interval: number;
+  repetitions: number;
+};
+
+/** Filter review logs by a time range. */
+export function filterLogsByRange(logs: ReviewLog[], range: StatsRange, today: string = todayKey()): ReviewLog[] {
+  if (range === 'all') {
+    return logs;
+  }
+
+  const daysBack = range === '7d' ? 6 : range === '30d' ? 29 : 89;
+  const cutoffKey = addDaysKey(today, -daysBack);
+
+  return logs.filter((log) => {
+    const logDate = log.reviewedAt.slice(0, 10);
+    return logDate >= cutoffKey;
+  });
+}
