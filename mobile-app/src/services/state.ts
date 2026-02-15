@@ -635,10 +635,10 @@ export function getDeckReviewStats(
     else easeBins['2.5+']++;
   }
 
-  const goodReviews = deckLogs.filter(l => l.grade >= 2).length;
+  const goodReviews = deckLogs.filter((l) => l.grade >= 2).length;
   const retention = deckLogs.length > 0 ? Math.round((goodReviews / deckLogs.length) * 100) : 0;
 
-  return { totalReviews, totalXp: deckLogs.reduce((s, l) => s + l.xpEarned, 0), avgXp, gradeCounts: [0,0,0,0], easeBins: {}, retention: 0, deckCards: [], deckLogs: [] };
+  return { totalReviews, totalXp, avgXp, gradeCounts, easeBins, retention, deckCards, deckLogs };
 }
 
 /** Get the current review streak. */
