@@ -23,7 +23,11 @@ then watch your level and streak grow. Built as a companion project to the
 - **Decks** — spaced-repetition flashcards (SM-2 algorithm) with independent
   scheduling for reverse cards. Review sessions with card flip animation,
   4-grade buttons (Again/Hard/Good/Easy), XP rewards, streak tracking,
-  pause/resume, and statistics.
+  pause/resume, and statistics. Per-deck stats include grade distribution,
+  ease factor distribution, retention rate, and reviews-over-time chart with
+  a compact time-range selector (7 Days / 30 Days / 90 Days / All Time) that
+  dynamically re-buckets the chart (daily/weekly/monthly) and filters all
+  period-specific metrics.
 
 ## Tech stack
 
@@ -86,20 +90,18 @@ mobile-app/
 │   │   ├── guide.tsx   # Guide tab (how-to-play + XP table)
 │   │   ├── decks/      # Decks tab (flashcards + SM-2 SRS)
 │   │   │   ├── index.tsx       # Decks list + due counts + create/edit
-  │   │   ├── [deckId].tsx      # Deck detail + card management + review CTA
-  │   │   ├── review.tsx        # Review session (flip, grade, XP)
-  │   │   ├── summary.tsx       # Review summary (XP breakdown)
-  │   │   ├── stats.tsx         # Per-deck statistics (charts)
-  │   │   └── review.tsx        # Review session (flip, grade, XP)
-  │   │   └── summary.tsx       # Review summary (XP breakdown)
-  │   ├── error.tsx     # Route-level error boundary
-  │   ├── components/     # ThemedText/ThemedView, error-boundary, app tabs, ui/ (Button, Card, Input, ProgressBar, LevelUpBanner, DeckCard, CardEditor, ReviewProgress, GradeButtons, ImportCardsModal…)
-  │   ├── constants/      # theme tokens (Colors, Spacing, Radius, Fonts)
-  │   ├── hooks/          # color scheme + theme hooks
-  │   ├── services/       # storage, api, gamification, state reducer, notifications, haptics, csv-parser
-  │   ├── store/          # game context provider (hydration + persistence + level-up detection)
-  │   ├── types/          # ambient type declarations (CSS modules)
-  │   └── global.css      # web font variables
+│   │   │   ├── [deckId].tsx    # Deck detail + card management + review CTA
+│   │   │   ├── review.tsx      # Review session (flip, grade, XP)
+│   │   │   ├── summary.tsx     # Review summary (XP breakdown)
+│   │   │   └── stats.tsx       # Per-deck statistics (charts + time-range selector)
+│   ├── error.tsx     # Route-level error boundary
+│   ├── components/     # ThemedText/ThemedView, error-boundary, app tabs, ui/ (Button, Card, Input, ProgressBar, LevelUpBanner, DeckCard, CardEditor, ReviewProgress, GradeButtons, ImportCardsModal…)
+│   ├── constants/      # theme tokens (Colors, Spacing, Radius, Fonts)
+│   ├── hooks/          # color scheme + theme hooks
+│   ├── services/       # storage, api, gamification, state reducer, notifications, haptics, csv-parser
+│   ├── store/          # game context provider (hydration + persistence + level-up detection)
+│   ├── types/          # ambient type declarations (CSS modules)
+│   └── global.css      # web font variables
 └── __tests__/          # Jest unit tests (gamification, streak math, storage, api, deck/card/review)
 └── docs/               # architecture notes
 ```
@@ -143,7 +145,7 @@ wrapper, and the API client (parsing and error handling). See
 - [x] Deck statistics (grade/ease distribution, retention, trend chart)
 - [x] Daily review reminder notification
 - [x] Import/export/rollback for deck data
-- [ ] Time-range selector on stats screen
+- [x] Time-range selector on stats screen (7d/30d/90d/all with dynamic chart bucketing)
 - [ ] Review streak heatmap calendar
 - [ ] Share stats as image
 - [ ] Previous period comparison

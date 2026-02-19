@@ -116,11 +116,12 @@ mobile-app/
 - **Notifications**: Daily review reminder at configurable time (default 20:00)
 - **Import/Export**: Full deck/card/review state included in Settings backup/restore
 - **Statistics**: Per-deck stats screen with grade distribution, ease factor distribution, reviews-over-time chart, retention rate
+- **Time-range selector**: Compact selector (7d/30d/90d/all) filters reviews-over-time chart and period-specific stats; uses pure `filterLogsByRange` helper in `gamification.ts` with `todayKey`/`addDaysKey` for timezone-safe date math; chart buckets adapt (daily for 7d/30d, weekly for 90d, monthly for all-time)
 - **Session pause/resume**: Session state persisted across app backgrounding
 - **Review streak**: Daily streak badge on Home and Decks tab with celebration haptic
 - **Error handling**: ErrorBoundary wraps review session; route-level error.tsx boundary
 
-## Recent commits (2026-01-22 → 2026-02-12)
+## Recent commits (2026-01-22 → 2026-02-19)
 
 | Date | Commit | Description |
 |------|--------|-------------|
@@ -140,4 +141,9 @@ mobile-app/
 | 2026-02-08 | 2f41caa | feat: add import history tracking and rollback functionality |
 | 2026-02-12 | a2727ed | feat: add deckId param to stats route with per-deck statistics |
 | 2026-02-12 | d13b58d | feat: build deck stats UI with BarChart and LineChart |
-| 2026-02-13 | (next) | feat: add time-range selector to stats screen |
+| 2026-02-14 | 3ab7f22 | fix: remove duplicate declarations in stats.tsx |
+| 2026-02-15 | c6845ac | feat: add StatsRange type and filterLogsByRange helper |
+| 2026-02-15 | 96b7a32 | fix: correct getDeckReviewStats to return computed values |
+| 2026-02-16 | b1edddd | test: add filterLogsByRange unit tests (17 tests) |
+| 2026-02-17 | (next) | feat: wire time-range selector with dynamic chart bucketing |
+| 2026-02-19 | (next) | docs: update AGENTS.md and README.md |
