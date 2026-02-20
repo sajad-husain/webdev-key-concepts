@@ -181,3 +181,78 @@ export function filterLogsByRange(logs: ReviewLog[], range: StatsRange, today: s
     return logDate >= cutoffKey;
   });
 }
+
+export type HeatmapCell = {
+  date: string;
+  count: number;
+  level: 0 | 1 | 2 | 3 | 4;
+};
+
+export type HeatmapData = {
+  cells: HeatmapCell[];
+  startDate: string;
+  endDate: string;
+  totalReviews: number;
+  maxCount: number;
+};
+
+/** Generate heatmap data for review activity (GitHub-style contribution calendar). */
+export function generateReviewHeatmap(
+  logs: ReviewLog[],
+  monthsBack: number = 12,
+  today: string = todayKey()
+): HeatmapData {
+  const endDate = today;
+  const startDate = addDaysKey(today, -monthsBack * 30);
+
+  const countsByDate = new Map<string, number>();
+  for (const log of logs) {
+    const dateKey = log.reviewedAt.slice(0, 10);
+    if (dateKey >= startDate && dateKey <= endDate) {
+      countsByDate.set(dateKey, (countsByDate.get(dateKey) || 0) + 1);
+    }
+  }
+
+  let maxCount = 0;
+  for (const count of countsByDate.values()) {
+    if (count > maxCount) maxCount = count;
+  }
+
+  const cells: HeatmapCell[] = [];
+  let current = startDate;
+  while (current <= endDate) {
+    const count = countsByDate.get(current) || 0;
+    let level: HeatmapCell['level'] = 0;
+    if (count > 0) {
+      if (maxCount <= 3) {
+        level = Math.min(count, 4) as HeatmapCell['level'];
+      } else {
+        const ratio = count / maxCount;
+        if (ratio > 0.75) level = 4;
+        else if (ratio > 0.5) level = 3;
+        else if (ratio > 0.25) level = 2;
+        else level = 1;
+      }
+    }
+    cells.push({ date: current, count, level });
+    current = addDaysKey(current, 1);
+  }
+
+  const totalReviews = Array.from(countsByDate.values()).reduce((a, b) => a + b, 0);
+
+  return { cells, startDate, endDate, totalReviews, maxCount };
+}
+
+/** Get the week index (0-based) for a date key relative to start date. */
+export function getWeekIndex(dateKey: string, startDate: string): number {
+  const start = new Date(startDate);
+  const target = new Date(dateKey);
+  const diffDays = Math.floor((target.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.floor(diffDays / 7);
+}
+
+/** Get the day of week (0=Sunday, 6=Saturday) for a date key. */
+export function getDayOfWeek(dateKey: string): number {
+  const date = new Date(dateKey);
+  return date.getDay();
+}
