@@ -11,7 +11,8 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useGame } from '@/store/game-provider';
 import { getDeckById } from '@/services/state';
 import { BarChart, LineChart } from 'react-native-chart-kit';
-import { filterLogsByRange, type StatsRange } from '@/services/gamification';
+import { filterLogsByRange, type StatsRange, generateReviewHeatmap } from '@/services/gamification';
+import { HeatmapCalendar } from '@/components/ui/heatmap-calendar';
 
 const { width } = Dimensions.get('window');
 const CHART_WIDTH = width * 0.9;
@@ -128,6 +129,11 @@ export default function ReviewStatsScreen() {
 
   const recentLogs = useMemo(
     () => state.reviewLogs.slice(-10).reverse(),
+    [state.reviewLogs]
+  );
+
+  const heatmapData = useMemo(
+    () => generateReviewHeatmap(state.reviewLogs, 12),
     [state.reviewLogs]
   );
 
@@ -309,6 +315,10 @@ export default function ReviewStatsScreen() {
               }}
             />
           )}
+        </Card>
+
+        <Card style={styles.sectionCard}>
+          <HeatmapCalendar data={heatmapData} />
         </Card>
       </SafeAreaView>
     </ThemedView>
