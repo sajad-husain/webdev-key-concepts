@@ -1,6 +1,6 @@
-import { FlatList, StyleSheet, Dimensions } from 'react-native';
+import { FlatList, StyleSheet, Dimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
@@ -13,6 +13,7 @@ import { getDeckById } from '@/services/state';
 import { BarChart, LineChart } from 'react-native-chart-kit';
 import { filterLogsByRange, type StatsRange, generateReviewHeatmap } from '@/services/gamification';
 import { HeatmapCalendar } from '@/components/ui/heatmap-calendar';
+import { shareStatsAsText, shareStatsAsImage } from '@/services/share';
 
 const { width } = Dimensions.get('window');
 const CHART_WIDTH = width * 0.9;
@@ -31,8 +32,19 @@ export default function ReviewStatsScreen() {
   const deckId = params?.deckId as string | undefined;
   const { state } = useGame();
   const [timeRange, setTimeRange] = useState<StatsRange>('30d');
+  const statsContainerRef = useRef<View | null>(null);
 
   const deck = deckId ? getDeckById(state, deckId) : null;
+
+  const handleShareText = async () => {
+    await shareStatsAsText(state, deckId);
+  };
+
+  const handleShareImage = async () => {
+    if (statsContainerRef.current) {
+      await shareStatsAsImage(statsContainerRef);
+    }
+  };
 
   const deckCards = deckId ? state.cards.filter((c) => c.deckId === deckId) : state.cards;
   const deckLogs = deckId ? state.reviewLogs.filter((l) => l.deckId === deckId) : state.reviewLogs;
@@ -138,10 +150,24 @@ export default function ReviewStatsScreen() {
   );
 
   return (
-    <ThemedView style={styles.container}>
+    <View ref={statsContainerRef} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <Card style={styles.summaryCard}>
-          <ThemedText type="subtitle">{title}</ThemedText>
+          <ThemedView style={styles.headerRow}>
+            <ThemedText type="subtitle">{title}</ThemedText>
+            <ThemedView style={styles.shareButtons}>
+              <Button
+                title="Share Text"
+                variant="ghost"
+                onPress={handleShareText}
+              />
+              <Button
+                title="Share Image"
+                variant="ghost"
+                onPress={handleShareImage}
+              />
+            </ThemedView>
+          </ThemedView>
           {deck && (
             <ThemedText type="small" themeColor="textSecondary">
               {deck.description}
@@ -321,7 +347,7 @@ export default function ReviewStatsScreen() {
           <HeatmapCalendar data={heatmapData} />
         </Card>
       </SafeAreaView>
-    </ThemedView>
+    </View>
   );
 }
 
@@ -340,6 +366,15 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     gap: Spacing.two,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  shareButtons: {
+    flexDirection: 'row',
+    gap: Spacing.one,
   },
   timeRangeSelector: {
     flexDirection: 'row',
