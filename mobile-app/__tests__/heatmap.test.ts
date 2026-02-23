@@ -6,7 +6,9 @@ import {
   getDayOfWeek,
   todayKey,
   addDaysKey,
+  comparePeriods,
   type ReviewLog,
+  type StatsRange,
 } from '@/services/gamification';
 
 function makeLog(id: string, dateKey: string): ReviewLog {
@@ -132,5 +134,133 @@ describe('getDayOfWeek', () => {
     expect(getDayOfWeek('2026-01-03')).toBe(6); // Saturday
     expect(getDayOfWeek('2026-01-04')).toBe(0); // Sunday
     expect(getDayOfWeek('2026-01-05')).toBe(1); // Monday
+  });
+});
+
+describe('comparePeriods', () => {
+  const today = todayKey();
+  const yesterday = addDaysKey(today, -1);
+  const weekAgo = addDaysKey(today, -7);
+  const twoWeeksAgo = addDaysKey(today, -14);
+  const thirtyDaysAgo = addDaysKey(today, -30);
+  const sixtyDaysAgo = addDaysKey(today, -60);
+
+  function makeLogWithGrade(id: string, dateKey: string, grade: 0 | 1 | 2 | 3 = 2): ReviewLog {
+    return {
+      id,
+      cardId: 'card-1',
+      deckId: 'deck-1',
+      grade,
+      reviewedAt: `${dateKey}T12:00:00.000Z`,
+      xpEarned: grade === 0 ? 3 : grade === 1 ? 4 : grade === 2 ? 5 : 7,
+      easeFactor: 2.5,
+      interval: 1,
+      repetitions: 1,
+    };
+  }
+
+  it('returns zero deltas for empty logs', () => {
+    const result = comparePeriods([], '7d', today);
+    expect(result.current.totalReviews).toBe(0);
+    expect(result.previous.totalReviews).toBe(0);
+    expect(result.delta.totalReviews).toBe(0);
+    expect(result.delta.totalXp).toBe(0);
+    expect(result.delta.retention).toBe(0);
+  });
+
+  it('calculates correct deltas for 7d range', () => {
+    const logs = [
+      // Current period (last 7 days)
+      makeLogWithGrade('log-1', today, 2),
+      makeLogWithGrade('log-2', yesterday, 3),
+      makeLogWithGrade('log-3', addDaysKey(today, -3), 2),
+      // Previous period (7-14 days ago)
+      makeLogWithGrade('log-4', addDaysKey(today, -8), 2),
+      makeLogWithGrade('log-5', addDaysKey(today, -10), 1),
+    ];
+    const result = comparePeriods(logs, '7d', today);
+    expect(result.current.totalReviews).toBe(3);
+    expect(result.previous.totalReviews).toBe(2);
+    expect(result.delta.totalReviews).toBe(1);
+    expect(result.current.totalXp).toBe(5 + 7 + 5); // 17
+    expect(result.previous.totalXp).toBe(5 + 4); // 9
+    expect(result.delta.totalXp).toBe(8);
+  });
+
+  it('calculates retention correctly', () => {
+    const logs = [
+      // Current: 2 Good, 1 Easy = 3/3 = 100% retention
+      makeLogWithGrade('log-1', today, 2),
+      makeLogWithGrade('log-2', yesterday, 3),
+      makeLogWithGrade('log-3', addDaysKey(today, -3), 2),
+      // Previous: 1 Good, 1 Again = 1/2 = 50% retention
+      makeLogWithGrade('log-4', addDaysKey(today, -8), 2),
+      makeLogWithGrade('log-5', addDaysKey(today, -10), 0),
+    ];
+    const result = comparePeriods(logs, '7d', today);
+    expect(result.current.retention).toBe(100);
+    expect(result.previous.retention).toBe(50);
+    expect(result.delta.retention).toBe(50);
+  });
+
+  it('handles 30d range with previous period', () => {
+    const logs = [
+      // Current period (last 30 days)
+      makeLogWithGrade('log-1', today, 2),
+      makeLogWithGrade('log-2', addDaysKey(today, -15), 2),
+      // Previous period (30-60 days ago)
+      makeLogWithGrade('log-3', addDaysKey(today, -45), 2),
+    ];
+    const result = comparePeriods(logs, '30d', today);
+    expect(result.current.totalReviews).toBe(2);
+    expect(result.previous.totalReviews).toBe(1);
+    expect(result.delta.totalReviews).toBe(1);
+  });
+
+  it('handles 90d range with previous period', () => {
+    const logs = [
+      makeLogWithGrade('log-1', today, 2),
+      makeLogWithGrade('log-2', addDaysKey(today, -45), 2),
+      makeLogWithGrade('log-3', addDaysKey(today, -95), 2),
+      makeLogWithGrade('log-4', addDaysKey(today, -140), 2),
+    ];
+    const result = comparePeriods(logs, '90d', today);
+    expect(result.current.totalReviews).toBe(2);
+    expect(result.previous.totalReviews).toBe(2);
+    expect(result.delta.totalReviews).toBe(0);
+  });
+
+  it('returns empty previous for all range', () => {
+    const logs = [
+      makeLogWithGrade('log-1', today, 2),
+      makeLogWithGrade('log-2', addDaysKey(today, -100), 2),
+    ];
+    const result = comparePeriods(logs, 'all', today);
+    expect(result.current.totalReviews).toBe(2);
+    expect(result.previous.totalReviews).toBe(0);
+    expect(result.delta.totalReviews).toBe(2);
+  });
+
+  it('calculates grade counts for both periods', () => {
+    const logs = [
+      makeLogWithGrade('log-1', today, 3), // Easy
+      makeLogWithGrade('log-2', yesterday, 2), // Good
+      makeLogWithGrade('log-3', addDaysKey(today, -8), 2), // Good (previous)
+      makeLogWithGrade('log-4', addDaysKey(today, -10), 1), // Hard (previous)
+    ];
+    const result = comparePeriods(logs, '7d', today);
+    expect(result.current.gradeCounts).toEqual([0, 0, 1, 1]); // 1 Good, 1 Easy
+    expect(result.previous.gradeCounts).toEqual([0, 1, 1, 0]); // 1 Hard, 1 Good
+  });
+
+  it('handles custom today parameter', () => {
+    const customToday = '2026-06-15';
+    const logs = [
+      makeLogWithGrade('log-1', '2026-06-10', 2),
+      makeLogWithGrade('log-2', '2026-06-05', 2),
+    ];
+    const result = comparePeriods(logs, '7d', customToday);
+    expect(result.current.totalReviews).toBe(1); // Only 2026-06-10 is within 7 days
+    expect(result.previous.totalReviews).toBe(1); // 2026-06-05 is in previous period
   });
 });
