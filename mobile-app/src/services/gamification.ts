@@ -256,3 +256,99 @@ export function getDayOfWeek(dateKey: string): number {
   const date = new Date(dateKey);
   return date.getDay();
 }
+
+export type PeriodComparison = {
+  current: {
+    totalReviews: number;
+    totalXp: number;
+    avgXp: number;
+    retention: number;
+    gradeCounts: number[];
+  };
+  previous: {
+    totalReviews: number;
+    totalXp: number;
+    avgXp: number;
+    retention: number;
+    gradeCounts: number[];
+  };
+  delta: {
+    totalReviews: number;
+    totalXp: number;
+    avgXp: number;
+    retention: number;
+  };
+};
+
+/** Compare current period with previous period of same length. */
+export function comparePeriods(
+  logs: ReviewLog[],
+  range: StatsRange,
+  today: string = todayKey()
+): PeriodComparison {
+  const currentLogs = filterLogsByRange(logs, range, today);
+
+  const currentTotalReviews = currentLogs.length;
+  const currentTotalXp = currentLogs.reduce((sum, log) => sum + log.xpEarned, 0);
+  const currentAvgXp = currentTotalReviews > 0 ? Math.round(currentTotalXp / currentTotalReviews) : 0;
+
+  const currentGradeCounts = [0, 0, 0, 0];
+  for (const log of currentLogs) {
+    if (log.grade >= 0 && log.grade <= 3) currentGradeCounts[log.grade]++;
+  }
+  const currentGoodReviews = currentGradeCounts[2] + currentGradeCounts[3];
+  const currentRetention = currentTotalReviews > 0
+    ? Math.round((currentGoodReviews / currentTotalReviews) * 100)
+    : 0;
+
+  let previousLogs: ReviewLog[];
+  if (range === 'all') {
+    previousLogs = [];
+  } else {
+    const daysBack = range === '7d' ? 6 : range === '30d' ? 29 : 89;
+    const periodLength = daysBack + 1;
+    const previousEndKey = addDaysKey(today, -(periodLength));
+    const previousStartKey = addDaysKey(previousEndKey, -periodLength + 1);
+
+    previousLogs = logs.filter((log) => {
+      const logDate = log.reviewedAt.slice(0, 10);
+      return logDate >= previousStartKey && logDate <= previousEndKey;
+    });
+  }
+
+  const previousTotalReviews = previousLogs.length;
+  const previousTotalXp = previousLogs.reduce((sum, log) => sum + log.xpEarned, 0);
+  const previousAvgXp = previousTotalReviews > 0 ? Math.round(previousTotalXp / previousTotalReviews) : 0;
+
+  const previousGradeCounts = [0, 0, 0, 0];
+  for (const log of previousLogs) {
+    if (log.grade >= 0 && log.grade <= 3) previousGradeCounts[log.grade]++;
+  }
+  const previousGoodReviews = previousGradeCounts[2] + previousGradeCounts[3];
+  const previousRetention = previousTotalReviews > 0
+    ? Math.round((previousGoodReviews / previousTotalReviews) * 100)
+    : 0;
+
+  return {
+    current: {
+      totalReviews: currentTotalReviews,
+      totalXp: currentTotalXp,
+      avgXp: currentAvgXp,
+      retention: currentRetention,
+      gradeCounts: currentGradeCounts,
+    },
+    previous: {
+      totalReviews: previousTotalReviews,
+      totalXp: previousTotalXp,
+      avgXp: previousAvgXp,
+      retention: previousRetention,
+      gradeCounts: previousGradeCounts,
+    },
+    delta: {
+      totalReviews: currentTotalReviews - previousTotalReviews,
+      totalXp: currentTotalXp - previousTotalXp,
+      avgXp: currentAvgXp - previousAvgXp,
+      retention: currentRetention - previousRetention,
+    },
+  };
+}
