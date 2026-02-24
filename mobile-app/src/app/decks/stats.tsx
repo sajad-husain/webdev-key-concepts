@@ -11,7 +11,7 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useGame } from '@/store/game-provider';
 import { getDeckById } from '@/services/state';
 import { BarChart, LineChart } from 'react-native-chart-kit';
-import { filterLogsByRange, type StatsRange, generateReviewHeatmap } from '@/services/gamification';
+import { filterLogsByRange, type StatsRange, generateReviewHeatmap, comparePeriods } from '@/services/gamification';
 import { HeatmapCalendar } from '@/components/ui/heatmap-calendar';
 import { shareStatsAsText, shareStatsAsImage } from '@/services/share';
 
@@ -76,6 +76,11 @@ export default function ReviewStatsScreen() {
 
   const goodReviews = gradeCounts[2] + gradeCounts[3];
   const retention = totalReviews > 0 ? Math.round((goodReviews / totalReviews) * 100) : 0;
+
+  const periodComparison = useMemo(
+    () => comparePeriods(deckLogs, timeRange),
+    [deckLogs, timeRange]
+  );
 
   const title = deck ? `${deck.name} Statistics` : 'Review Statistics';
 
@@ -203,6 +208,98 @@ export default function ReviewStatsScreen() {
             </ThemedView>
           </ThemedView>
         </Card>
+
+        {timeRange !== 'all' && periodComparison.previous.totalReviews > 0 && (
+          <Card style={styles.sectionCard}>
+            <ThemedText type="smallBold">Previous Period Comparison</ThemedText>
+            <ThemedView style={styles.comparisonGrid}>
+              <ThemedView style={styles.comparisonItem}>
+                <ThemedText type="small" themeColor="textSecondary">Total Reviews</ThemedText>
+                <ThemedView style={styles.comparisonValues}>
+                  <ThemedText type="subtitle" themeColor="accent">
+                    {periodComparison.current.totalReviews}
+                  </ThemedText>
+                  <ThemedText
+                    type="small"
+                    themeColor={
+                      periodComparison.delta.totalReviews > 0
+                        ? 'success'
+                        : periodComparison.delta.totalReviews < 0
+                        ? 'danger'
+                        : 'textSecondary'
+                    }
+                  >
+                    {periodComparison.delta.totalReviews > 0 ? '+' : ''}
+                    {periodComparison.delta.totalReviews}
+                  </ThemedText>
+                </ThemedView>
+              </ThemedView>
+              <ThemedView style={styles.comparisonItem}>
+                <ThemedText type="small" themeColor="textSecondary">Total XP</ThemedText>
+                <ThemedView style={styles.comparisonValues}>
+                  <ThemedText type="subtitle" themeColor="gold">
+                    {periodComparison.current.totalXp}
+                  </ThemedText>
+                  <ThemedText
+                    type="small"
+                    themeColor={
+                      periodComparison.delta.totalXp > 0
+                        ? 'success'
+                        : periodComparison.delta.totalXp < 0
+                        ? 'danger'
+                        : 'textSecondary'
+                    }
+                  >
+                    {periodComparison.delta.totalXp > 0 ? '+' : ''}
+                    {periodComparison.delta.totalXp}
+                  </ThemedText>
+                </ThemedView>
+              </ThemedView>
+              <ThemedView style={styles.comparisonItem}>
+                <ThemedText type="small" themeColor="textSecondary">Avg XP/Review</ThemedText>
+                <ThemedView style={styles.comparisonValues}>
+                  <ThemedText type="subtitle" themeColor="success">
+                    {periodComparison.current.avgXp}
+                  </ThemedText>
+                  <ThemedText
+                    type="small"
+                    themeColor={
+                      periodComparison.delta.avgXp > 0
+                        ? 'success'
+                        : periodComparison.delta.avgXp < 0
+                        ? 'danger'
+                        : 'textSecondary'
+                    }
+                  >
+                    {periodComparison.delta.avgXp > 0 ? '+' : ''}
+                    {periodComparison.delta.avgXp}
+                  </ThemedText>
+                </ThemedView>
+              </ThemedView>
+              <ThemedView style={styles.comparisonItem}>
+                <ThemedText type="small" themeColor="textSecondary">Retention</ThemedText>
+                <ThemedView style={styles.comparisonValues}>
+                  <ThemedText type="subtitle" themeColor="gold">
+                    {periodComparison.current.retention}%
+                  </ThemedText>
+                  <ThemedText
+                    type="small"
+                    themeColor={
+                      periodComparison.delta.retention > 0
+                        ? 'success'
+                        : periodComparison.delta.retention < 0
+                        ? 'danger'
+                        : 'textSecondary'
+                    }
+                  >
+                    {periodComparison.delta.retention > 0 ? '+' : ''}
+                    {periodComparison.delta.retention}%
+                  </ThemedText>
+                </ThemedView>
+              </ThemedView>
+            </ThemedView>
+          </Card>
+        )}
 
         <Card style={styles.sectionCard}>
           <ThemedText type="smallBold">Grade Distribution</ThemedText>
@@ -435,5 +532,22 @@ const styles = StyleSheet.create({
   emptyChart: {
     textAlign: 'center',
     paddingVertical: Spacing.four,
+  },
+  comparisonGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  comparisonItem: {
+    width: '48%',
+    alignItems: 'center',
+    gap: Spacing.half,
+    padding: Spacing.two,
+  },
+  comparisonValues: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: Spacing.one,
   },
 });
