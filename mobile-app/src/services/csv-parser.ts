@@ -8,8 +8,18 @@ export interface ParsedCard {
   back: string;
 }
 
+export interface DuplicateMatch {
+  newCard: ParsedCard;
+  existingCardId: string;
+  existingFront: string;
+  existingBack: string;
+  matchType: 'exact' | 'fuzzy';
+  similarity: number;
+}
+
 export interface ParseResult {
   cards: ParsedCard[];
+  duplicates: DuplicateMatch[];
   errors: string[];
   totalRows: number;
   validRows: number;
@@ -24,6 +34,7 @@ export function parseCSV(csvText: string): ParseResult {
   const lines = csvText.trim().split(/\r?\n/);
   const result: ParseResult = {
     cards: [],
+    duplicates: [],
     errors: [],
     totalRows: 0,
     validRows: 0,
@@ -135,4 +146,129 @@ export function cardsToCSV(cards: { front: string; back: string }[]): string {
     lines.push(`${escapeField(card.front)},${escapeField(card.back)}`);
   }
   return lines.join('\n');
+}
+
+/**
+ * Normalizes text for comparison (lowercase, trim, remove extra whitespace)
+ */
+function normalizeText(text: string): string {
+  return text.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+/**
+ * Calculates Levenshtein distance between two strings
+ */
+function levenshteinDistance(a: string, b: string): number {
+  const matrix: number[][] = [];
+
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1, // insertion
+          matrix[i - 1][j] + 1 // deletion
+        );
+      }
+    }
+  }
+
+  return matrix[b.length][a.length];
+}
+
+/**
+ * Calculates similarity between two strings (0 to 1)
+ */
+function calculateSimilarity(a: string, b: string): number {
+  const normalizedA = normalizeText(a);
+  const normalizedB = normalizeText(b);
+  const maxLen = Math.max(normalizedA.length, normalizedB.length);
+  if (maxLen === 0) return 1;
+  const distance = levenshteinDistance(normalizedA, normalizedB);
+  return 1 - distance / maxLen;
+}
+
+/**
+ * Checks for duplicate cards against existing cards
+ */
+export function detectDuplicates(
+  newCards: ParsedCard[],
+  existingCards: { id: string; front: string; back: string }[],
+  fuzzyThreshold: number = 0.85
+): DuplicateMatch[] {
+  const duplicates: DuplicateMatch[] = [];
+
+  for (const newCard of newCards) {
+    const normalizedNewFront = normalizeText(newCard.front);
+    const normalizedNewBack = normalizeText(newCard.back);
+
+    for (const existingCard of existingCards) {
+      const normalizedExistingFront = normalizeText(existingCard.front);
+      const normalizedExistingBack = normalizeText(existingCard.back);
+
+      // Exact match
+      if (normalizedNewFront === normalizedExistingFront && normalizedNewBack === normalizedExistingBack) {
+        duplicates.push({
+          newCard,
+          existingCardId: existingCard.id,
+          existingFront: existingCard.front,
+          existingBack: existingCard.back,
+          matchType: 'exact',
+          similarity: 1,
+        });
+        break;
+      }
+
+      // Fuzzy match
+      const frontSimilarity = calculateSimilarity(newCard.front, existingCard.front);
+      const backSimilarity = calculateSimilarity(newCard.back, existingCard.back);
+      const avgSimilarity = (frontSimilarity + backSimilarity) / 2;
+
+      if (avgSimilarity >= fuzzyThreshold) {
+        duplicates.push({
+          newCard,
+          existingCardId: existingCard.id,
+          existingFront: existingCard.front,
+          existingBack: existingCard.back,
+          matchType: 'fuzzy',
+          similarity: avgSimilarity,
+        });
+        break;
+      }
+    }
+  }
+
+  return duplicates;
+}
+
+/**
+ * Filters out duplicate cards from the import
+ */
+export function filterDuplicates(
+  cards: ParsedCard[],
+  duplicates: DuplicateMatch[],
+  action: 'skip' | 'replace' = 'skip'
+): ParsedCard[] {
+  if (action === 'replace') {
+    return cards;
+  }
+
+  const duplicateFronts = new Set(duplicates.map((d) => normalizeText(d.newCard.front)));
+  const duplicateBacks = new Set(duplicates.map((d) => normalizeText(d.newCard.back)));
+
+  return cards.filter((card) => {
+    const normalizedFront = normalizeText(card.front);
+    const normalizedBack = normalizeText(card.back);
+    return !duplicateFronts.has(normalizedFront) || !duplicateBacks.has(normalizedBack);
+  });
 }
