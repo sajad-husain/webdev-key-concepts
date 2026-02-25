@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 /// <reference types="jest" />
-import { parseCSV, parseCSVLine, cardsToCSV, generateCSVTemplate } from '@/services/csv-parser';
+import { parseCSV, parseCSVLine, cardsToCSV, generateCSVTemplate, detectDuplicates, filterDuplicates } from '@/services/csv-parser';
 
 describe('CSV Parser', () => {
   describe('parseCSVLine', () => {
@@ -122,5 +122,96 @@ describe('CSV Parser', () => {
       expect(result.cards.length).toBeGreaterThan(0);
       expect(result.validRows).toBeGreaterThan(0);
     });
+  });
+});
+
+describe('Duplicate Detection', () => {
+  const existingCards = [
+    { id: 'card-1', front: 'What is the capital of France?', back: 'Paris' },
+    { id: 'card-2', front: '2 + 2 = ?', back: '4' },
+    { id: 'card-3', front: 'Hello world', back: 'Bonjour monde' },
+  ];
+
+  it('detects exact duplicates', () => {
+    const newCards = [
+      { front: 'What is the capital of France?', back: 'Paris' },
+      { front: 'New question', back: 'New answer' },
+    ];
+    const duplicates = detectDuplicates(newCards, existingCards);
+    expect(duplicates).toHaveLength(1);
+    expect(duplicates[0].matchType).toBe('exact');
+    expect(duplicates[0].similarity).toBe(1);
+    expect(duplicates[0].existingCardId).toBe('card-1');
+  });
+
+  it('detects exact duplicates ignoring case and whitespace', () => {
+    const newCards = [
+      { front: '  what is the capital of france?  ', back: '  paris  ' },
+    ];
+    const duplicates = detectDuplicates(newCards, existingCards);
+    expect(duplicates).toHaveLength(1);
+    expect(duplicates[0].matchType).toBe('exact');
+  });
+
+  it('detects fuzzy duplicates', () => {
+    const newCards = [
+      { front: 'What is the capital city of France?', back: 'Paris' }, // Similar to card-1
+    ];
+    const duplicates = detectDuplicates(newCards, existingCards, 0.8);
+    expect(duplicates).toHaveLength(1);
+    expect(duplicates[0].matchType).toBe('fuzzy');
+    expect(duplicates[0].similarity).toBeGreaterThan(0.8);
+  });
+
+  it('does not detect dissimilar cards as duplicates', () => {
+    const newCards = [
+      { front: 'What is the meaning of life?', back: '42' },
+    ];
+    const duplicates = detectDuplicates(newCards, existingCards, 0.85);
+    expect(duplicates).toHaveLength(0);
+  });
+
+  it('detects multiple duplicates', () => {
+    const newCards = [
+      { front: 'What is the capital of France?', back: 'Paris' },
+      { front: '2 + 2 = ?', back: '4' },
+      { front: 'New question', back: 'New answer' },
+    ];
+    const duplicates = detectDuplicates(newCards, existingCards);
+    expect(duplicates).toHaveLength(2);
+  });
+
+  it('returns empty array when no existing cards', () => {
+    const newCards = [
+      { front: 'What is the capital of France?', back: 'Paris' },
+    ];
+    const duplicates = detectDuplicates(newCards, []);
+    expect(duplicates).toHaveLength(0);
+  });
+
+  it('filters out exact duplicates when skipping', () => {
+    const newCards = [
+      { front: 'What is the capital of France?', back: 'Paris' },
+      { front: 'New question', back: 'New answer' },
+    ];
+    const duplicates = detectDuplicates(newCards, existingCards);
+    const filtered = filterDuplicates(newCards, duplicates, 'skip');
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].front).toBe('New question');
+  });
+
+  it('keeps all cards when replacing', () => {
+    const newCards = [
+      { front: 'What is the capital of France?', back: 'Paris' },
+      { front: 'New question', back: 'New answer' },
+    ];
+    const duplicates = detectDuplicates(newCards, existingCards);
+    const filtered = filterDuplicates(newCards, duplicates, 'replace');
+    expect(filtered).toHaveLength(2);
+  });
+
+  it('handles empty new cards array', () => {
+    const duplicates = detectDuplicates([], existingCards);
+    expect(duplicates).toHaveLength(0);
   });
 });
