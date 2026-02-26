@@ -10,7 +10,7 @@ import {
 } from '@/services/gamification';
 
 /** Creates a card pair (original + reverse) for a deck. */
-export function createCardPair(deckId: string, front: string, back: string): [Card, Card] {
+export function createCardPair(deckId: string, front: string, back: string, tags?: string[]): [Card, Card] {
   const now = todayKey();
   const card: Card = {
     id: uid('card'),
@@ -23,6 +23,7 @@ export function createCardPair(deckId: string, front: string, back: string): [Ca
     nextReview: now,
     isReversed: false,
     createdAt: now,
+    tags: tags ?? [],
   };
   const reverseCard: Card = {
     id: uid('card'),
@@ -35,6 +36,7 @@ export function createCardPair(deckId: string, front: string, back: string): [Ca
     nextReview: now,
     isReversed: true,
     createdAt: now,
+    tags: tags ?? [],
   };
   return [card, reverseCard];
 }
@@ -97,6 +99,7 @@ export type Card = {
   nextReview: string;
   isReversed: boolean;
   createdAt: string;
+  tags?: string[];
 };
 
 export type ReviewLog = {
@@ -173,9 +176,12 @@ export type GameAction =
   | { type: 'decks/add'; name: string; description?: string }
   | { type: 'decks/remove'; id: string }
   | { type: 'decks/rename'; id: string; name: string }
-  | { type: 'cards/add'; deckId: string; front: string; back: string }
+  | { type: 'cards/add'; deckId: string; front: string; back: string; tags?: string[] }
   | { type: 'cards/remove'; id: string }
   | { type: 'cards/update'; id: string; front: string; back: string }
+  | { type: 'cards/setTags'; id: string; tags: string[] }
+  | { type: 'cards/addTag'; id: string; tag: string }
+  | { type: 'cards/removeTag'; id: string; tag: string }
   | { type: 'cards/importMany'; deckId: string; cards: { front: string; back: string }[] }
   | { type: 'review/submit'; cardId: string; grade: 0 | 1 | 2 | 3; xpEarned: number }
   | { type: 'reviewStreak/update'; date: string }
@@ -416,7 +422,7 @@ export function reducer(state: GameState, action: GameAction): GameState {
       };
 
     case 'cards/add': {
-      const [card, reverseCard] = createCardPair(action.deckId, action.front, action.back);
+      const [card, reverseCard] = createCardPair(action.deckId, action.front, action.back, action.tags);
       return {
         ...state,
         cards: [...state.cards, card, reverseCard],
@@ -441,7 +447,8 @@ export function reducer(state: GameState, action: GameAction): GameState {
       const now = todayKey();
       const newCards: Card[] = [];
       for (const card of action.cards) {
-        const [newCard, reverseCard] = createCardPair(action.deckId, card.front, card.back);
+        const tags = 'tags' in card && Array.isArray((card as any).tags) ? (card as any).tags : [];
+        const [newCard, reverseCard] = createCardPair(action.deckId, card.front, card.back, tags);
         newCards.push(newCard, reverseCard);
       }
       return {
@@ -449,6 +456,34 @@ export function reducer(state: GameState, action: GameAction): GameState {
         cards: [...state.cards, ...newCards],
       };
     }
+
+    case 'cards/setTags':
+      return {
+        ...state,
+        cards: state.cards.map((c) =>
+          c.id === action.id ? { ...c, tags: action.tags } : c,
+        ),
+      };
+
+    case 'cards/addTag':
+      return {
+        ...state,
+        cards: state.cards.map((c) =>
+          c.id === action.id
+            ? { ...c, tags: [...new Set([...(c.tags ?? []), action.tag])] }
+            : c,
+        ),
+      };
+
+    case 'cards/removeTag':
+      return {
+        ...state,
+        cards: state.cards.map((c) =>
+          c.id === action.id
+            ? { ...c, tags: (c.tags ?? []).filter((t) => t !== action.tag) }
+            : c,
+        ),
+      };
 
     case 'review/submit': {
       const now = new Date().toISOString();
@@ -806,6 +841,9 @@ function toCard(value: unknown): Card | null {
     nextReview: typeof value.nextReview === 'string' ? value.nextReview : '',
     isReversed: value.isReversed === true,
     createdAt: typeof value.createdAt === 'string' ? value.createdAt : '',
+    tags: Array.isArray(value.tags)
+      ? value.tags.filter((t): t is string => typeof t === 'string')
+      : [],
   };
 }
 
