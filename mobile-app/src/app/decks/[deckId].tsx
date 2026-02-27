@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -19,17 +19,34 @@ import { useToast } from '@/components/ui/toast-provider';
 
 export default function DeckDetailScreen() {
   const params = useLocalSearchParams();
-  const deckId = params?.deckId as string;
-  const { state, dispatch } = useGame();
+  const rawDeckId = params?.deckId;
+  const deckId = Array.isArray(rawDeckId) ? rawDeckId[0] : rawDeckId;
+  const { state, dispatch, hydrated } = useGame();
   const theme = useTheme();
-  const deck = deckId ? getDeckById(state, deckId) : undefined;
-  const stats = deckId ? getDeckStats(state, deckId) : { total: 0, due: 0, newCards: 0, reviewed: 0 };
-  const deckCards = deckId ? state.cards.filter((c) => c.deckId === deckId) : [];
-  const [editingCard, setEditingCard] = useState<{ id: string; front: string; back: string } | null>(null);
-  const [showImportModal, setShowImportModal] = useState(false);
   const { showToast } = useToast();
 
+  const deckIdRef = useRef(deckId);
+  useEffect(() => {
+    deckIdRef.current = deckId;
+  }, [deckId]);
+
+  // Hooks must be called unconditionally at the top level
+  const [editingCard, setEditingCard] = useState<{ id: string; front: string; back: string } | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+
+  // Wait for hydration before accessing state
+  if (!hydrated) {
+    return (
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+          <ThemedText type="subtitle" style={styles.loadingText}>Loading…</ThemedText>
+        </SafeAreaView>
+      </ThemedView>
+    );
+  }
+
   if (!deckId) {
+    showToast({ message: 'Missing deck ID', type: 'error' });
     return (
       <ThemedView style={styles.container}>
         <SafeAreaView style={styles.safeArea}>
@@ -41,7 +58,10 @@ export default function DeckDetailScreen() {
     );
   }
 
+  const deck = getDeckById(state, deckId);
+
   if (!deck) {
+    showToast({ message: 'Deck not found', type: 'error' });
     return (
       <ThemedView style={styles.container}>
         <SafeAreaView style={styles.safeArea}>
@@ -52,10 +72,17 @@ export default function DeckDetailScreen() {
     );
   }
 
+  const stats = getDeckStats(state, deckId);
+  const deckCards = state.cards.filter((c) => c.deckId === deckId);
+
   const addCard = (front: string, back: string) => {
-    if (!deckId) return;
-    console.log('Adding card to deck:', deckId, { front, back });
-    dispatch({ type: 'cards/add', deckId, front, back });
+    if (!deckIdRef.current) {
+      showToast({ message: 'No deck selected', type: 'error' });
+      return;
+    }
+    console.log('[DeckDetail] Adding card to deck:', deckIdRef.current, { front, back });
+    dispatch({ type: 'cards/add', deckId: deckIdRef.current, front, back });
+    showToast({ message: 'Card added! Reverse card created.', type: 'success' });
   };
 
   const removeCard = (cardId: string) => {
@@ -65,26 +92,27 @@ export default function DeckDetailScreen() {
         text: 'Remove',
         style: 'destructive',
         onPress: () => {
-          // Find the card and its reverse before deleting
-          const cardToDelete = state.cards.find(c => c.id === cardId);
-          const reverseCard = cardToDelete 
-            ? state.cards.find(c => c.deckId === cardToDelete.deckId && c.front === cardToDelete.back && c.back === cardToDelete.front && c.isReversed !== cardToDelete.isReversed)
+          const cardToDelete = state.cards.find((c) => c.id === cardId);
+          const reverseCard = cardToDelete
+            ? state.cards.find(
+                (c) =>
+                  c.deckId === cardToDelete.deckId &&
+                  c.front === cardToDelete.back &&
+                  c.back === cardToDelete.front &&
+                  c.isReversed !== cardToDelete.isReversed
+              )
             : null;
-          
+
           dispatch({ type: 'cards/remove', id: cardId });
           if (reverseCard) {
             dispatch({ type: 'cards/remove', id: reverseCard.id });
           }
-          
-          // Show undo toast
+
           showToast({
             message: 'Card deleted',
             type: 'error',
             duration: 5000,
           });
-          
-          // Store for potential undo (in a real app, you'd use a more robust undo stack)
-          // For now, we'll just show the toast and let the user know it was deleted
         },
       },
     ]);
@@ -93,6 +121,7 @@ export default function DeckDetailScreen() {
   const updateCard = (id: string, front: string, back: string) => {
     dispatch({ type: 'cards/update', id, front, back });
     setEditingCard(null);
+    showToast({ message: 'Card updated!', type: 'success' });
   };
 
   const cancelEdit = () => {
@@ -104,10 +133,17 @@ export default function DeckDetailScreen() {
   };
 
   const handleImport = (cards: { front: string; back: string }[]) => {
+    const currentDeckId = deckIdRef.current;
+    if (!currentDeckId) {
+      showToast({ message: 'No deck selected', type: 'error' });
+      return;
+    }
+    console.log('[DeckDetail] Importing', cards.length, 'cards to deck:', currentDeckId);
     for (const card of cards) {
-      dispatch({ type: 'cards/add', deckId: deckId!, front: card.front, back: card.back });
+      dispatch({ type: 'cards/add', deckId: currentDeckId, front: card.front, back: card.back });
     }
     setShowImportModal(false);
+    showToast({ message: `Imported ${cards.length} cards`, type: 'success' });
   };
 
   const openImportModal = () => {
@@ -226,6 +262,10 @@ const styles = StyleSheet.create({
     paddingBottom: BottomTabInset + Spacing.three,
     maxWidth: MaxContentWidth,
     gap: Spacing.three,
+  },
+  loadingText: {
+    textAlign: 'center',
+    marginTop: Spacing.five,
   },
   headerSection: {
     paddingHorizontal: Spacing.two,
