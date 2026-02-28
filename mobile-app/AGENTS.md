@@ -117,11 +117,16 @@ mobile-app/
 - **Import/Export**: Full deck/card/review state included in Settings backup/restore
 - **Statistics**: Per-deck stats screen with grade distribution, ease factor distribution, reviews-over-time chart, retention rate
 - **Time-range selector**: Compact selector (7d/30d/90d/all) filters reviews-over-time chart and period-specific stats; uses pure `filterLogsByRange` helper in `gamification.ts` with `todayKey`/`addDaysKey` for timezone-safe date math; chart buckets adapt (daily for 7d/30d, weekly for 90d, monthly for all-time)
+- **Review streak heatmap**: GitHub-style contribution calendar (12 months) with intensity levels; `generateReviewHeatmap` in `gamification.ts` + `HeatmapCalendar` component
+- **Share stats**: Export statistics as text or PNG image via `expo-sharing` + `react-native-view-shot`; `share.ts` service
+- **Period comparison**: Previous period comparison (WoW/MoM) for reviews, XP, avg XP, retention; `comparePeriods` in `gamification.ts`
+- **Duplicate detection**: Exact + fuzzy (Levenshtein) duplicate card detection on CSV import; `detectDuplicates`/`filterDuplicates` in `csv-parser.ts`
+- **Card tags**: Optional tags per card; actions `cards/setTags`, `cards/addTag`, `cards/removeTag`; tag-aware `createCardPair`
 - **Session pause/resume**: Session state persisted across app backgrounding
 - **Review streak**: Daily streak badge on Home and Decks tab with celebration haptic
 - **Error handling**: ErrorBoundary wraps review session; route-level error.tsx boundary
 
-## Recent commits (2026-01-22 → 2026-02-19)
+## Recent commits (2026-01-22 → 2026-02-27)
 
 | Date | Commit | Description |
 |------|--------|-------------|
@@ -145,5 +150,19 @@ mobile-app/
 | 2026-02-15 | c6845ac | feat: add StatsRange type and filterLogsByRange helper |
 | 2026-02-15 | 96b7a32 | fix: correct getDeckReviewStats to return computed values |
 | 2026-02-16 | b1edddd | test: add filterLogsByRange unit tests (17 tests) |
-| 2026-02-17 | (next) | feat: wire time-range selector with dynamic chart bucketing |
-| 2026-02-19 | (next) | docs: update AGENTS.md and README.md |
+| 2026-02-17 | 4ac164c | feat: add comparePeriods helper to gamification.ts |
+| 2026-02-17 | 8efd8d5 | test: add comparePeriods unit tests (11 tests) |
+| 2026-02-18 | 6cfbbe2 | feat: add previous period comparison UI to stats screen |
+| 2026-02-19 | fb3802e | feat: add share service for stats (text and image) |
+| 2026-02-19 | e7d53ab | chore: add expo-sharing and react-native-view-shot dependencies |
+| 2026-02-19 | 453bb31 | feat: add share buttons to stats screen |
+| 2026-02-20 | f419c42 | feat: add generateReviewHeatmap helper to gamification.ts |
+| 2026-02-20 | ac3866c | feat: add HeatmapCalendar UI component |
+| 2026-02-21 | 83c5139 | test: add generateReviewHeatmap unit tests (13 tests) |
+| 2026-02-21 | efb1ed0 | feat: wire heatmap calendar into stats screen |
+| 2026-02-22 | defbe61 | feat: add duplicate card detection to csv parser |
+| 2026-02-22 | 927395d | test: add duplicate detection unit tests (9 tests) |
+| 2026-02-23 | ceecdc3 | feat: add card tags support to state |
+| 2026-02-24 | 3ab7f22 | fix: remove duplicate declarations in stats.tsx |
+| 2026-02-27 | f6c2cda | fix: add missing decks tab icon assets |
+| 2026-02-27 | bd1ed4c | fix: add hydration guard and fix deckId handling in deck detail screen |

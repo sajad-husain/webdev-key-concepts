@@ -146,8 +146,8 @@ wrapper, and the API client (parsing and error handling). See
 - [x] Daily review reminder notification
 - [x] Import/export/rollback for deck data
 - [x] Time-range selector on stats screen (7d/30d/90d/all with dynamic chart bucketing)
-- [ ] Review streak heatmap calendar
-- [ ] Share stats as image
-- [ ] Previous period comparison
-- [ ] Duplicate card detection on import
-- [ ] Card tags/folders
+- [x] Review streak heatmap calendar
+- [x] Share stats as image
+- [x] Previous period comparison
+- [x] Duplicate card detection on import
+- [x] Card tags/folders

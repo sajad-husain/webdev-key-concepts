@@ -31,7 +31,7 @@ export default function DeckDetailScreen() {
   }, [deckId]);
 
   // Hooks must be called unconditionally at the top level
-  const [editingCard, setEditingCard] = useState<{ id: string; front: string; back: string } | null>(null);
+  const [editingCard, setEditingCard] = useState<{ id: string; front: string; back: string; tags?: string[] } | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
 
   // Wait for hydration before accessing state
@@ -75,13 +75,13 @@ export default function DeckDetailScreen() {
   const stats = getDeckStats(state, deckId);
   const deckCards = state.cards.filter((c) => c.deckId === deckId);
 
-  const addCard = (front: string, back: string) => {
+  const addCard = (front: string, back: string, tags?: string[]) => {
     if (!deckIdRef.current) {
       showToast({ message: 'No deck selected', type: 'error' });
       return;
     }
-    console.log('[DeckDetail] Adding card to deck:', deckIdRef.current, { front, back });
-    dispatch({ type: 'cards/add', deckId: deckIdRef.current, front, back });
+    console.log('[DeckDetail] Adding card to deck:', deckIdRef.current, { front, back, tags });
+    dispatch({ type: 'cards/add', deckId: deckIdRef.current, front, back, tags });
     showToast({ message: 'Card added! Reverse card created.', type: 'success' });
   };
 
@@ -128,8 +128,8 @@ export default function DeckDetailScreen() {
     setEditingCard(null);
   };
 
-  const startEdit = (card: { id: string; front: string; back: string }) => {
-    setEditingCard({ id: card.id, front: card.front, back: card.back });
+  const startEdit = (card: { id: string; front: string; back: string; tags?: string[] }) => {
+    setEditingCard({ id: card.id, front: card.front, back: card.back, tags: card.tags });
   };
 
   const handleImport = (cards: { front: string; back: string }[]) => {
