@@ -178,7 +178,7 @@ export type GameAction =
   | { type: 'decks/rename'; id: string; name: string }
   | { type: 'cards/add'; deckId: string; front: string; back: string; tags?: string[] }
   | { type: 'cards/remove'; id: string }
-  | { type: 'cards/update'; id: string; front: string; back: string }
+  | { type: 'cards/update'; id: string; front: string; back: string; tags?: string[] }
   | { type: 'cards/setTags'; id: string; tags: string[] }
   | { type: 'cards/addTag'; id: string; tag: string }
   | { type: 'cards/removeTag'; id: string; tag: string }
@@ -439,7 +439,9 @@ export function reducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         cards: state.cards.map((c) =>
-          c.id === action.id ? { ...c, front: action.front, back: action.back } : c,
+          c.id === action.id
+            ? { ...c, front: action.front, back: action.back, tags: action.tags ?? c.tags }
+            : c,
         ),
       };
 
