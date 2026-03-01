@@ -11,7 +11,7 @@ import { useToast } from './toast-provider';
 
 type CardEditorProps = {
   onAdd: (front: string, back: string, tags?: string[]) => void;
-  onUpdate?: (id: string, front: string, back: string) => void;
+  onUpdate?: (id: string, front: string, back: string, tags?: string[]) => void;
   editingCard?: { id: string; front: string; back: string; tags?: string[] } | null;
   onCancel?: () => void;
 };
@@ -38,7 +38,7 @@ export function CardEditor({ onAdd, onUpdate, editingCard, onCancel }: CardEdito
     impact();
     const tags = parseTags(tagsInput);
     if (isEditing && editingCard && onUpdate) {
-      onUpdate(editingCard.id, f, b);
+      onUpdate(editingCard.id, f, b, tags);
       showToast({ message: 'Card updated!', type: 'success' });
     } else {
       onAdd(f, b, tags);
