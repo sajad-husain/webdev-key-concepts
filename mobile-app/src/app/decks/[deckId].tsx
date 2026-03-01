@@ -118,8 +118,8 @@ export default function DeckDetailScreen() {
     ]);
   };
 
-  const updateCard = (id: string, front: string, back: string) => {
-    dispatch({ type: 'cards/update', id, front, back });
+  const updateCard = (id: string, front: string, back: string, tags?: string[]) => {
+    dispatch({ type: 'cards/update', id, front, back, tags });
     setEditingCard(null);
     showToast({ message: 'Card updated!', type: 'success' });
   };
