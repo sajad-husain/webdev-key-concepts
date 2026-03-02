@@ -13,14 +13,14 @@ import { FlatList } from 'react-native';
 
 type ImportCardsModalProps = {
   deckId: string;
-  onImport: (cards: { front: string; back: string }[]) => void;
+  onImport: (cards: { front: string; back: string; tags?: string[] }[]) => void;
   onClose: () => void;
 };
 
 export function ImportCardsModal({ deckId, onImport, onClose }: ImportCardsModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [parsedCards, setParsedCards] = useState<{ front: string; back: string }[]>([]);
+  const [parsedCards, setParsedCards] = useState<{ front: string; back: string; tags?: string[] }[]>([]);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
   const { showToast } = useToast();
 
@@ -84,7 +84,7 @@ export function ImportCardsModal({ deckId, onImport, onClose }: ImportCardsModal
       <ThemedView style={styles.modalContent}>
         <ThemedText type="subtitle">Import Cards</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          Select a CSV file with columns: front,back
+          Select a CSV file with columns: front,back,tags (optional)
         </ThemedText>
 
         {!showPreview ? (
@@ -111,6 +111,11 @@ export function ImportCardsModal({ deckId, onImport, onClose }: ImportCardsModal
                 <ThemedView style={styles.previewRow}>
                   <ThemedText type="small" numberOfLines={1}>{item.front}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>{item.back}</ThemedText>
+                  {item.tags && item.tags.length > 0 && (
+                    <ThemedText type="small" themeColor="accent" numberOfLines={1}>
+                      {item.tags.join(', ')}
+                    </ThemedText>
+                  )}
                 </ThemedView>
               )}
             />
