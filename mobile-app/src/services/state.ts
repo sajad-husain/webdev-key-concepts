@@ -182,7 +182,7 @@ export type GameAction =
   | { type: 'cards/setTags'; id: string; tags: string[] }
   | { type: 'cards/addTag'; id: string; tag: string }
   | { type: 'cards/removeTag'; id: string; tag: string }
-  | { type: 'cards/importMany'; deckId: string; cards: { front: string; back: string }[] }
+  | { type: 'cards/importMany'; deckId: string; cards: { front: string; back: string; tags?: string[] }[] }
   | { type: 'review/submit'; cardId: string; grade: 0 | 1 | 2 | 3; xpEarned: number }
   | { type: 'reviewStreak/update'; date: string }
   | { type: 'reviewSession/save'; session: ReviewSession }
