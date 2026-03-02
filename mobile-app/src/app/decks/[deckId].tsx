@@ -132,7 +132,7 @@ export default function DeckDetailScreen() {
     setEditingCard({ id: card.id, front: card.front, back: card.back, tags: card.tags });
   };
 
-  const handleImport = (cards: { front: string; back: string }[]) => {
+  const handleImport = (cards: { front: string; back: string; tags?: string[] }[]) => {
     const currentDeckId = deckIdRef.current;
     if (!currentDeckId) {
       showToast({ message: 'No deck selected', type: 'error' });
@@ -140,7 +140,7 @@ export default function DeckDetailScreen() {
     }
     console.log('[DeckDetail] Importing', cards.length, 'cards to deck:', currentDeckId);
     for (const card of cards) {
-      dispatch({ type: 'cards/add', deckId: currentDeckId, front: card.front, back: card.back });
+      dispatch({ type: 'cards/add', deckId: currentDeckId, front: card.front, back: card.back, tags: card.tags });
     }
     setShowImportModal(false);
     showToast({ message: `Imported ${cards.length} cards`, type: 'success' });
