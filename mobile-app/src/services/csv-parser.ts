@@ -6,6 +6,7 @@
 export interface ParsedCard {
   front: string;
   back: string;
+  tags?: string[];
 }
 
 export interface DuplicateMatch {
@@ -28,6 +29,7 @@ export interface ParseResult {
 /**
  * Parses a CSV string into an array of card objects
  * Expected format: front,back (with optional headers)
+ * Optional 3rd column: tags (comma-separated)
  * Supports quoted fields and escaped quotes
  */
 export function parseCSV(csvText: string): ParseResult {
@@ -47,7 +49,10 @@ export function parseCSV(csvText: string): ParseResult {
 
   // Check for header row
   const firstLine = lines[0].toLowerCase().trim();
-  const hasHeader = firstLine === 'front,back' || firstLine === 'front, back' || firstLine === 'front\tback';
+  const hasHeader = firstLine === 'front,back' || 
+                    firstLine === 'front,back,tags' ||
+                    firstLine === 'front, back' || 
+                    firstLine === 'front\tback';
   const startIndex = hasHeader ? 1 : 0;
 
   for (let i = startIndex; i < lines.length; i++) {
@@ -75,7 +80,16 @@ export function parseCSV(csvText: string): ParseResult {
         continue;
       }
 
-      result.cards.push({ front, back });
+      // Parse tags from 3rd column if present
+      let tags: string[] | undefined;
+      if (fields.length >= 3) {
+        const tagsStr = fields[2].trim();
+        if (tagsStr) {
+          tags = tagsStr.split(',').map(t => t.trim()).filter(t => t.length > 0);
+        }
+      }
+
+      result.cards.push({ front, back, tags });
       result.validRows++;
     } catch (error) {
       result.errors.push(`Row ${i + 1}: ${error instanceof Error ? error.message : 'Parse error'}`);
@@ -128,14 +142,14 @@ export function parseCSVLine(line: string): string[] {
  * Generates a CSV template for users to fill in
  */
 export function generateCSVTemplate(): string {
-  return 'front,back\n"What is the capital of France?",Paris\n"2 + 2 = ?",4\n';
+  return 'front,back,tags\n"What is the capital of France?",Paris,geography\n"2 + 2 = ?",4,math\n';
 }
 
 /**
  * Converts cards array to CSV string
  */
-export function cardsToCSV(cards: { front: string; back: string }[]): string {
-  const lines = ['front,back'];
+export function cardsToCSV(cards: { front: string; back: string; tags?: string[] }[]): string {
+  const lines = ['front,back,tags'];
   for (const card of cards) {
     const escapeField = (field: string) => {
       if (field.includes(',') || field.includes('"') || field.includes('\n')) {
@@ -143,7 +157,8 @@ export function cardsToCSV(cards: { front: string; back: string }[]): string {
       }
       return field;
     };
-    lines.push(`${escapeField(card.front)},${escapeField(card.back)}`);
+    const tagsStr = card.tags && card.tags.length > 0 ? card.tags.join(',') : '';
+    lines.push(`${escapeField(card.front)},${escapeField(card.back)},${escapeField(tagsStr)}`);
   }
   return lines.join('\n');
 }
