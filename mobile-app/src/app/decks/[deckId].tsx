@@ -215,6 +215,22 @@ export default function DeckDetailScreen() {
                         </ThemedView>
                       )}
                     </ThemedView>
+                    {item.tags && item.tags.length > 0 && (
+                      <ThemedView style={styles.tagContainer}>
+                        {item.tags.slice(0, 3).map((tag, tagIndex) => (
+                          <ThemedView key={tagIndex} style={styles.tagPill}>
+                            <ThemedText type="small" themeColor="accent">{tag}</ThemedText>
+                          </ThemedView>
+                        ))}
+                        {item.tags.length > 3 && (
+                          <ThemedView style={styles.tagPill}>
+                            <ThemedText type="small" themeColor="textSecondary">
+                              +{item.tags.length - 3}
+                            </ThemedText>
+                          </ThemedView>
+                        )}
+                      </ThemedView>
+                    )}
                     <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
                       {item.back}
                     </ThemedText>
@@ -321,5 +337,17 @@ const styles = StyleSheet.create({
   },
   importButton: {
     width: '100%',
+  },
+  tagContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.half,
+    marginTop: Spacing.half,
+  },
+  tagPill: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 1,
+    borderRadius: Radius.pill,
+    backgroundColor: '#E0E1E6',
   },
 });
