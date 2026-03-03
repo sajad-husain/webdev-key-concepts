@@ -358,3 +358,84 @@ describe('Import Integration', () => {
     expect(importedCards[1].back).toBe('Answer, with comma');
   });
 });
+
+describe('Card Tags', () => {
+  it('updates card with tags', () => {
+    const initialState = createInitialState();
+    const deckId = 'test-deck';
+
+    // Add a card first
+    const addAction = {
+      type: 'cards/add' as const,
+      deckId,
+      front: 'Q',
+      back: 'A',
+      tags: ['initial-tag'],
+    };
+    const stateWithCards = reducer(initialState, addAction);
+    const cardId = stateWithCards.cards.find((c: Card) => !c.isReversed)?.id;
+
+    // Update the card with new tags
+    const updateAction = {
+      type: 'cards/update' as const,
+      id: cardId!,
+      front: 'Updated Q',
+      back: 'Updated A',
+      tags: ['updated-tag', 'another-tag'],
+    };
+    const newState = reducer(stateWithCards, updateAction);
+
+    const updatedCard = newState.cards.find((c: Card) => c.id === cardId);
+    expect(updatedCard?.front).toBe('Updated Q');
+    expect(updatedCard?.back).toBe('Updated A');
+    expect(updatedCard?.tags).toEqual(['updated-tag', 'another-tag']);
+  });
+
+  it('preserves tags when updating without tags parameter', () => {
+    const initialState = createInitialState();
+    const deckId = 'test-deck';
+
+    // Add a card with tags
+    let state = reducer(initialState, { type: 'cards/add', deckId, front: 'Q', back: 'A', tags: ['keep-me'] });
+    const cardId = state.cards.find((c: Card) => !c.isReversed)?.id;
+
+    // Update without tags parameter (should preserve existing tags)
+    state = reducer(state, { type: 'cards/update', id: cardId!, front: 'Updated Q', back: 'Updated A' });
+
+    const updatedCard = state.cards.find((c: Card) => c.id === cardId);
+    expect(updatedCard?.tags).toEqual(['keep-me']);
+  });
+
+  it('imports cards with tags from CSV', () => {
+    const initialState = createInitialState();
+    let state = reducer(initialState, { type: 'decks/add', name: 'Test Deck' });
+    const deck = state.decks[0];
+    const deckId = deck.id;
+
+    // Import cards with tags
+    const cardsToImport = [
+      { front: 'Import Q1', back: 'Import A1', tags: ['tag1', 'tag2'] },
+      { front: 'Import Q2', back: 'Import A2', tags: ['tag3'] },
+      { front: 'Import Q3', back: 'Import A3' }, // no tags
+    ];
+
+    const newState = reducer(state, {
+      type: 'cards/importMany',
+      deckId,
+      cards: cardsToImport,
+    });
+
+    // Should have 6 cards (3 pairs with reverses)
+    expect(newState.cards.filter((c) => c.deckId === deckId)).toHaveLength(6);
+
+    // Verify original cards have tags
+    const originalCards = newState.cards.filter((c) => c.deckId === deckId && !c.isReversed);
+    const card1 = originalCards.find((c) => c.front === 'Import Q1');
+    const card2 = originalCards.find((c) => c.front === 'Import Q2');
+    const card3 = originalCards.find((c) => c.front === 'Import Q3');
+
+    expect(card1?.tags).toEqual(['tag1', 'tag2']);
+    expect(card2?.tags).toEqual(['tag3']);
+    expect(card3?.tags).toEqual([]);
+  });
+});
