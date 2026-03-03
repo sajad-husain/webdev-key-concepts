@@ -89,27 +89,27 @@ describe('CSV Parser', () => {
   describe('cardsToCSV', () => {
     it('generates CSV from cards', () => {
       const cards = [
-        { front: 'Front 1', back: 'Back 1' },
-        { front: 'Front 2', back: 'Back 2' },
+        { front: 'Front 1', back: 'Back 1', tags: [] },
+        { front: 'Front 2', back: 'Back 2', tags: [] },
       ];
       const csv = cardsToCSV(cards);
-      expect(csv).toBe('front,back\nFront 1,Back 1\nFront 2,Back 2');
+      expect(csv).toBe('front,back,tags\nFront 1,Back 1,\nFront 2,Back 2,');
     });
 
     it('escapes fields with commas', () => {
-      const cards = [{ front: 'A, B', back: 'C' }];
+      const cards = [{ front: 'A, B', back: 'C', tags: [] }];
       const csv = cardsToCSV(cards);
-      expect(csv).toBe('front,back\n"A, B",C');
+      expect(csv).toBe('front,back,tags\n"A, B",C,');
     });
 
     it('escapes fields with quotes', () => {
-      const cards = [{ front: 'He said "Hi"', back: 'Quote' }];
+      const cards = [{ front: 'He said "Hi"', back: 'Quote', tags: [] }];
       const csv = cardsToCSV(cards);
-      expect(csv).toBe('front,back\n"He said ""Hi""",Quote');
+      expect(csv).toBe('front,back,tags\n"He said ""Hi""",Quote,');
     });
 
     it('escapes fields with newlines', () => {
-      const cards = [{ front: 'Line 1\nLine 2', back: 'Answer' }];
+      const cards = [{ front: 'Line 1\nLine 2', back: 'Answer', tags: [] }];
       const csv = cardsToCSV(cards);
       expect(csv).toContain('"Line 1\nLine 2"');
     });
