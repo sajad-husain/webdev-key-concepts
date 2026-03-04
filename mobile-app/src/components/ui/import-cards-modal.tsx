@@ -5,7 +5,6 @@ import * as DocumentPicker from 'expo-document-picker';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
-import { Spacing } from '@/constants/theme';
 import { useToast } from '@/components/ui/toast-provider';
 import { parseCSV } from '@/services/csv-parser';
 import { impact } from '@/services/haptics';

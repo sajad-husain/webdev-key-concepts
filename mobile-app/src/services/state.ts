@@ -446,7 +446,6 @@ export function reducer(state: GameState, action: GameAction): GameState {
       };
 
     case 'cards/importMany': {
-      const now = todayKey();
       const newCards: Card[] = [];
       for (const card of action.cards) {
         const tags = 'tags' in card && Array.isArray((card as any).tags) ? (card as any).tags : [];
