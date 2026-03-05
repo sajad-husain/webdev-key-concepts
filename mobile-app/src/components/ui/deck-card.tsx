@@ -18,17 +18,25 @@ export function DeckCard({ name, description, total, due, onPress }: DeckCardPro
   const theme = useTheme();
 
   return (
-    <Pressable onPress={() => { impact(); onPress(); }}>
-      <ThemedView style={[styles.card, { backgroundColor: theme.card }]}>
+    <Pressable
+      onPress={() => { impact(); onPress(); }}
+      style={({ pressed }) => [styles.card, { backgroundColor: theme.card }, pressed && styles.cardPressed]}
+    >
+      <ThemedView style={[styles.cardInner, { backgroundColor: theme.card }]}>
         <ThemedView style={styles.header}>
           <ThemedText type="smallBold" numberOfLines={1}>{name}</ThemedText>
-          {due > 0 && (
-            <ThemedView style={[styles.badge, { backgroundColor: theme.accent }]}>
-              <ThemedText type="small" style={[styles.badgeText, { color: theme.accentContrast }]}>
-                {due}
-              </ThemedText>
-            </ThemedView>
-          )}
+          <ThemedView style={styles.chevronContainer}>
+            {due > 0 && (
+              <ThemedView style={[styles.badge, { backgroundColor: theme.accent }]}>
+                <ThemedText type="small" style={[styles.badgeText, { color: theme.accentContrast }]}>
+                  {due}
+                </ThemedText>
+              </ThemedView>
+            )}
+            <ThemedText type="small" themeColor="textSecondary" style={styles.chevron}>
+              ›
+            </ThemedText>
+          </ThemedView>
         </ThemedView>
         {description ? (
           <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
@@ -49,10 +57,25 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     gap: Spacing.one,
   },
+  cardPressed: {
+    backgroundColor: '#E5E5EF',
+  },
+  cardInner: {
+    gap: Spacing.one,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  chevronContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  chevron: {
+    fontSize: 20,
+    fontWeight: '300',
   },
   badge: {
     minWidth: 24,
