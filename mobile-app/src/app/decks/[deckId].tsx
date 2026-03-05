@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet } from 'react-native';
+import { Alert, FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 
@@ -16,6 +16,7 @@ import { getDeckById, getDeckStats } from '@/services/state';
 import { tap } from '@/services/haptics';
 import { useGame } from '@/store/game-provider';
 import { useToast } from '@/components/ui/toast-provider';
+import { Modal } from 'react-native';
 
 export default function DeckDetailScreen() {
   const params = useLocalSearchParams();
@@ -33,6 +34,7 @@ export default function DeckDetailScreen() {
   // Hooks must be called unconditionally at the top level
   const [editingCard, setEditingCard] = useState<{ id: string; front: string; back: string; tags?: string[] } | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showAddCardModal, setShowAddCardModal] = useState(false);
 
   // Wait for hydration before accessing state
   if (!hydrated) {
@@ -83,6 +85,7 @@ export default function DeckDetailScreen() {
     console.log('[DeckDetail] Adding card to deck:', deckIdRef.current, { front, back, tags });
     dispatch({ type: 'cards/add', deckId: deckIdRef.current, front, back, tags });
     showToast({ message: 'Card added! Reverse card created.', type: 'success' });
+    setShowAddCardModal(false);
   };
 
   const removeCard = (cardId: string) => {
@@ -124,10 +127,6 @@ export default function DeckDetailScreen() {
     showToast({ message: 'Card updated!', type: 'success' });
   };
 
-  const cancelEdit = () => {
-    setEditingCard(null);
-  };
-
   const startEdit = (card: { id: string; front: string; back: string; tags?: string[] }) => {
     setEditingCard({ id: card.id, front: card.front, back: card.back, tags: card.tags });
   };
@@ -148,6 +147,10 @@ export default function DeckDetailScreen() {
 
   const openImportModal = () => {
     setShowImportModal(true);
+  };
+
+  const openAddCardModal = () => {
+    setShowAddCardModal(true);
   };
 
   return (
@@ -172,24 +175,39 @@ export default function DeckDetailScreen() {
         </ThemedView>
 
         <ThemedView style={styles.actionRow}>
+          <Button title="Add Card" onPress={openAddCardModal} />
           <Button title="Import Cards" variant="secondary" onPress={openImportModal} style={styles.importButton} />
         </ThemedView>
 
-        <CardEditor
-          onAdd={addCard}
-          onUpdate={updateCard}
-          editingCard={editingCard}
-          onCancel={cancelEdit}
-        />
+        <Modal visible={showAddCardModal} transparent animationType="slide" onRequestClose={() => setShowAddCardModal(false)}>
+          <View style={styles.modalOverlay} onTouchStart={() => setShowAddCardModal(false)}>
+            <View style={styles.modalContent} onTouchStart={() => {}}>
+              <ThemedView style={styles.modalHeader}>
+                <ThemedText type="subtitle">Add Card</ThemedText>
+                <Button title="Cancel" variant="ghost" onPress={() => setShowAddCardModal(false)} />
+              </ThemedView>
+              <CardEditor
+                onAdd={addCard}
+                onUpdate={updateCard}
+                editingCard={editingCard}
+                onCancel={() => { setShowAddCardModal(false); setEditingCard(null); }}
+              />
+            </View>
+          </View>
+        </Modal>
 
         <FlatList
           data={deckCards}
           keyExtractor={(card) => card.id}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
-            <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
-              No cards yet — add your first one above.
-            </ThemedText>
+            <ThemedView style={styles.emptyContainer}>
+              <ThemedText type="smallBold" style={styles.emptyTitle}>No cards yet</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.emptySubtitle}>
+                Tap Add Card to create your first flashcard
+              </ThemedText>
+              <Button title="Add Your First Card" onPress={openAddCardModal} style={styles.emptyButton} />
+            </ThemedView>
           }
           renderItem={({ item, index }) => {
             const isDue = item.nextReview <= new Date().toISOString().slice(0, 10);
@@ -290,6 +308,14 @@ const styles = StyleSheet.create({
   statsRow: {
     marginTop: Spacing.one,
   },
+  actionRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    marginTop: Spacing.one,
+  },
+  importButton: {
+    flex: 1,
+  },
   listContent: {
     gap: Spacing.two,
     paddingBottom: Spacing.three,
@@ -332,12 +358,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.half,
     minHeight: 32,
   },
-  actionRow: {
-    marginTop: Spacing.one,
-  },
-  importButton: {
-    width: '100%',
-  },
   tagContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -349,5 +369,38 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     borderRadius: Radius.pill,
     backgroundColor: '#E0E1E6',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: Radius.lg,
+    borderTopRightRadius: Radius.lg,
+    padding: Spacing.four,
+    maxHeight: '85%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.three,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: Spacing.six,
+    gap: Spacing.two,
+  },
+  emptyTitle: {
+    fontSize: 18,
+  },
+  emptySubtitle: {
+    textAlign: 'center',
+    color: 'gray',
+  },
+  emptyButton: {
+    marginTop: Spacing.two,
   },
 });
