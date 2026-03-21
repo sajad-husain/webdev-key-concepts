@@ -7,6 +7,8 @@ import {
   SM2_INITIAL_EASE,
   sm2NextReview,
   type ReviewGrade,
+  type Card,
+  type Deck,
 } from '@/services/gamification';
 
 /** Creates a card pair (original + reverse) for a deck. */
