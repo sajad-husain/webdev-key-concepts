@@ -529,7 +529,9 @@ export function reducer(state: GameState, action: GameAction): GameState {
       const lastDate = state.reviewStreak.lastReviewDate;
       const today = action.date;
       let newStreak: number;
-      if (lastDate === today) {
+      if (lastDate == null) {
+        newStreak = 1;
+      } else if (lastDate === today) {
         newStreak = currentStreak;
       } else if (lastDate === addDaysKey(today, -1)) {
         newStreak = currentStreak + 1;
