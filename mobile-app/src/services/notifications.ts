@@ -33,25 +33,37 @@ async function ensureChannel(): Promise<void> {
   });
 }
 
-export async function ensurePermissions(): Promise<boolean> {
+export type PermissionStatus = {
+  granted: boolean;
+  status: NotificationPermissionsStatus;
+  details?: { ios?: NotificationIosPermissionStatus };
+};
+
+export function getPermissionStatus(
+  settings: NotificationPermissions,
+): PermissionStatus {
+  const granted = settings.granted;
+  let details: PermissionStatus['details'];
+  if (Platform.OS === 'ios') {
+    details = { ios: settings.ios?.status };
+  }
+  return { granted, status: settings.status, details };
+}
+
+export async function ensurePermissions(): Promise<PermissionStatus> {
   if (!supported()) {
-    return false;
+    return { granted: false, status: 'denied' };
   }
   const settings = await Notifications.getPermissionsAsync();
-  if (settings.granted) {
-    return true;
+  const status = getPermissionStatus(settings);
+  if (status.granted) {
+    return status;
   }
-  if (
-    Platform.OS === 'ios' &&
-    settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
-  ) {
-    return true;
-  }
-  if (settings.status === 'undetermined') {
+  if (status.status === 'undetermined') {
     const requested = await Notifications.requestPermissionsAsync();
-    return requested.granted;
+    return getPermissionStatus(requested);
   }
-  return false;
+  return status;
 }
 
 /**
