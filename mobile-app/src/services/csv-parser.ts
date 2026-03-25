@@ -269,6 +269,6 @@ export function filterDuplicates(
   return cards.filter((card) => {
     const normalizedFront = normalizeText(card.front);
     const normalizedBack = normalizeText(card.back);
-    return !duplicateFronts.has(normalizedFront) || !duplicateBacks.has(normalizedBack);
+    return !duplicateFronts.has(normalizedFront) && !duplicateBacks.has(normalizedBack);
   });
 }
