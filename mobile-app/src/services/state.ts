@@ -7,8 +7,7 @@ import {
   SM2_INITIAL_EASE,
   sm2NextReview,
   type ReviewGrade,
-  type Card,
-  type Deck,
+  SM2_MIN_EASE,
 } from '@/services/gamification';
 
 /** Creates a card pair (original + reverse) for a deck. */
@@ -666,12 +665,19 @@ export function getDeckReviewStats(
     if (log.grade >= 0 && log.grade <= 3) gradeCounts[log.grade]++;
   }
 
-  const easeBins: Record<string, number> = { '1.3-1.7': 0, '1.7-2.1': 0, '2.1-2.5': 0, '2.5+': 0 };
+  const binWidth = (SM2_INITIAL_EASE - SM2_MIN_EASE) / 3;
+  const bin1Upper = SM2_MIN_EASE + binWidth;
+  const bin2Upper = SM2_MIN_EASE + binWidth * 2;
+  const easeBins: Record<string, number> = {
+    [`${SM2_MIN_EASE.toFixed(1)}-${bin1Upper.toFixed(1)}`]: 0,
+    [`${bin1Upper.toFixed(1)}-${bin2Upper.toFixed(1)}`]: 0,
+    [`${bin2Upper.toFixed(1)}-${SM2_INITIAL_EASE.toFixed(1)}`]: 0,
+  };
   for (const card of state.cards.filter((c) => c.deckId === deckId)) {
-    if (card.easeFactor < 1.7) easeBins['1.3-1.7']++;
-    else if (card.easeFactor < 2.1) easeBins['1.7-2.1']++;
-    else if (card.easeFactor < 2.5) easeBins['2.1-2.5']++;
-    else easeBins['2.5+']++;
+    if (card.easeFactor < bin1Upper) easeBins[`${SM2_MIN_EASE.toFixed(1)}-${bin1Upper.toFixed(1)}`]++;
+    else if (card.easeFactor < bin2Upper) easeBins[`${bin1Upper.toFixed(1)}-${bin2Upper.toFixed(1)}`]++;
+    else if (card.easeFactor < SM2_INITIAL_EASE) easeBins[`${bin2Upper.toFixed(1)}-${SM2_INITIAL_EASE.toFixed(1)}`]++;
+    else easeBins[`${SM2_INITIAL_EASE.toFixed(1)}+`]++;
   }
 
   const goodReviews = deckLogs.filter((l) => l.grade >= 2).length;
