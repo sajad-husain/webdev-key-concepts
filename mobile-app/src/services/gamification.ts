@@ -153,6 +153,14 @@ export function calculateReviewXp(grade: ReviewGrade, streak: number): number {
   return REVIEW_BASE_XP + REVIEW_GRADE_BONUS[grade] + Math.min(streak, STREAK_BONUS_CAP);
 }
 
+/** Return XP breakdown showing base, grade, and streak components. */
+export function calculateReviewXpBreakdown(grade: ReviewGrade, streak: number) {
+  const base = REVIEW_BASE_XP;
+  const gradeBonus = REVIEW_GRADE_BONUS[grade];
+  const streakBonus = Math.min(streak, STREAK_BONUS_CAP);
+  return { base, gradeBonus, streakBonus, total: base + gradeBonus + streakBonus };
+}
+
 export type StatsRange = '7d' | '30d' | '90d' | 'all';
 
 export type ReviewLog = {
