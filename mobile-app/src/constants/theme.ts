@@ -44,6 +44,16 @@ export const Colors = {
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
+/** Validate that a value is a valid ThemeColor key. */
+export function isThemeColor(value: string): value is ThemeColor {
+  return value in Colors.light && value in Colors.dark;
+}
+
+/** Get a theme color value for the specified mode. */
+export function getThemeColor(mode: 'light' | 'dark', color: ThemeColor): string {
+  return Colors[mode][color];
+}
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */
