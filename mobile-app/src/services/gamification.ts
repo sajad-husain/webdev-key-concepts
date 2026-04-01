@@ -114,6 +114,11 @@ type Sm2Output = Sm2Input & { nextReview: string };
 
 export type ReviewGrade = 0 | 1 | 2 | 3;
 
+/** Type guard to check if a value is a valid ReviewGrade. */
+export function isReviewGrade(value: unknown): value is ReviewGrade {
+  return typeof value === 'number' && value >= 0 && value <= 3;
+}
+
 /** Apply SM-2 algorithm to calculate next review schedule. */
 export function sm2NextReview(
   grade: ReviewGrade,
