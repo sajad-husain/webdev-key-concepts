@@ -199,12 +199,26 @@ function calculateSimilarity(a: string, b: string): number {
 }
 
 /**
+ * Configurable fuzzy duplicate detection threshold (0 to 1).
+ * Higher values = stricter matching (fewer false positives).
+ * Default: 0.85
+ */
+export const DUPLICATE_FUZZY_THRESHOLD = 0.85;
+
+/** Set the fuzzy duplicate detection threshold. */
+export function setFuzzyThreshold(threshold: number): void {
+  if (threshold >= 0 && threshold <= 1) {
+    DUPLICATE_FUZZY_THRESHOLD = threshold;
+  }
+}
+
+/**
  * Checks for duplicate cards against existing cards
  */
 export function detectDuplicates(
   newCards: ParsedCard[],
   existingCards: { id: string; front: string; back: string }[],
-  fuzzyThreshold: number = 0.85
+  fuzzyThreshold: number = DUPLICATE_FUZZY_THRESHOLD
 ): DuplicateMatch[] {
   const duplicates: DuplicateMatch[] = [];
 
