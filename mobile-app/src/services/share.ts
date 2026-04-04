@@ -1,6 +1,7 @@
 import * as Sharing from 'expo-sharing';
 import { captureRef } from 'react-native-view-shot';
 import { View } from 'react-native';
+import { SM2_MIN_EASE, SM2_INITIAL_EASE } from '@/services/gamification';
 import { GameState } from '@/services/state';
 
 export async function shareStatsAsText(state: GameState, deckId?: string): Promise<void> {
@@ -23,12 +24,19 @@ export async function shareStatsAsText(state: GameState, deckId?: string): Promi
   const goodReviews = gradeCounts[2] + gradeCounts[3];
   const retention = totalReviews > 0 ? Math.round((goodReviews / totalReviews) * 100) : 0;
 
-  const easeBins = { '1.3-1.7': 0, '1.7-2.1': 0, '2.1-2.5': 0, '2.5+': 0 };
+  const binWidth = (SM2_INITIAL_EASE - SM2_MIN_EASE) / 3;
+  const bin1Upper = SM2_MIN_EASE + binWidth;
+  const bin2Upper = SM2_MIN_EASE + binWidth * 2;
+  const easeBins = {
+    [`${SM2_MIN_EASE.toFixed(1)}-${bin1Upper.toFixed(1)}`]: 0,
+    [`${bin1Upper.toFixed(1)}-${bin2Upper.toFixed(1)}`]: 0,
+    [`${bin2Upper.toFixed(1)}-${SM2_INITIAL_EASE.toFixed(1)}`]: 0,
+  };
   for (const card of deckCards) {
-    if (card.easeFactor < 1.7) easeBins['1.3-1.7']++;
-    else if (card.easeFactor < 2.1) easeBins['1.7-2.1']++;
-    else if (card.easeFactor < 2.5) easeBins['2.1-2.5']++;
-    else easeBins['2.5+']++;
+    if (card.easeFactor < bin1Upper) easeBins[`${SM2_MIN_EASE.toFixed(1)}-${bin1Upper.toFixed(1)}`]++;
+    else if (card.easeFactor < bin2Upper) easeBins[`${bin1Upper.toFixed(1)}-${bin2Upper.toFixed(1)}`]++;
+    else if (card.easeFactor < SM2_INITIAL_EASE) easeBins[`${bin2Upper.toFixed(1)}-${SM2_INITIAL_EASE.toFixed(1)}`]++;
+    else easeBins[`${SM2_INITIAL_EASE.toFixed(1)}+`]++;
   }
 
   const gradeNames = ['Again', 'Hard', 'Good', 'Easy'];
