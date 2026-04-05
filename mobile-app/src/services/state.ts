@@ -921,7 +921,7 @@ function toImportHistoryEntry(value: unknown): ImportHistoryEntry | null {
   };
 }
 
-export const GAME_STATE_VERSION = 1 as const;
+export const GAME_STATE_VERSION = 2 as const;
 
 export type SerializedGameState = {
   version: typeof GAME_STATE_VERSION;
@@ -935,6 +935,15 @@ export function serializeState(state: GameState): SerializedGameState {
     exportedAt: new Date().toISOString(),
     state,
   };
+}
+
+export function migrateStateV1toV2(input: unknown): GameState {
+  const state = deserializeState(input);
+  return state;
+}
+
+export function getCurrentStateVersion(): number {
+  return GAME_STATE_VERSION;
 }
 
 export function deserializeState(input: unknown): GameState {
