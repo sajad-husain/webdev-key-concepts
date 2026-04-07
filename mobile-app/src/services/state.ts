@@ -255,6 +255,7 @@ export function reducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'quests/remove': {
+      // Never refund XP - quest XP was earned once on claim/complete
       return { ...state, quests: state.quests.filter((q) => q.id !== action.id) };
     }
 
