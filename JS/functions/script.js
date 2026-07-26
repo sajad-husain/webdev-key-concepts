@@ -34,3 +34,15 @@ function learningParams(num1, num2) {
 
 //passing value to the funciton when calling is arguments
 console.log(learningParams(5, 6));
+
+// Default parameter
+function defValues(name = "sajjad") {
+  return name;
+}
+defValues("ali"); // output ali
+defValues(); // output sajjad
+
+// function without return value
+function sayHi() {
+  console.log("Hi"); // it'll print hi but will have undefined value
+}
