@@ -83,3 +83,40 @@ const counter = makeCounter();
 console.log(counter()); // 1
 console.log(counter()); // 2
 console.log(counter()); // 3
+
+function makeMultiplier(mul) {
+  return (num) => num * mul;
+}
+const double = makeMultiplier(2);
+const triple = makeMultiplier(3);
+
+console.log("double: ", double(5));
+console.log("triple", triple(5));
+
+function createBackAccount(initialBalance) {
+  let balance = initialBalance;
+  return {
+    deposit(amount) {
+      if (balance > 0) {
+        balance += amount;
+        return `Deposit amount: ${amount}, New balance ${balance}`;
+      }
+      return "Invalid balance";
+    },
+    withdraw(amount) {
+      if (amount > 0 && amount < balance) {
+        balance -= amount;
+        return `Withdrew amount: ${amount}, New Balance: ${balance}`;
+      }
+    },
+    checkBalance() {
+      return `Your balance is ${balance}`;
+    },
+  };
+}
+
+const myAcc = createBackAccount(1000);
+console.log(myAcc.withdraw(200));
+console.log(myAcc.checkBalance());
+console.log(myAcc.deposit(900));
+console.log(myAcc.checkBalance());
