@@ -56,4 +56,30 @@ const scapeFunc = () => {
 };
 
 console.log(globalVar);
-console.log(localVar);
+// console.log(localVar);
+
+// block scope var let const and {}
+
+if (true) {
+  let blockScope = "I'm block scoped";
+  const alsoBlock = "me too";
+  var oldVar = "I leak out";
+}
+
+// console.log(blockScope); // Ref Error
+// console.log(alsoBlock); // Ref Error
+// console.log(oldVar); // i leak out // this ignores block scoope
+
+function makeCounter() {
+  let count = 0; // this variable is "closed over"
+
+  return function () {
+    count++;
+    return count;
+  };
+}
+
+const counter = makeCounter();
+console.log(counter()); // 1
+console.log(counter()); // 2
+console.log(counter()); // 3
