@@ -120,3 +120,13 @@ console.log(myAcc.withdraw(200));
 console.log(myAcc.checkBalance());
 console.log(myAcc.deposit(900));
 console.log(myAcc.checkBalance());
+
+// Functions are values
+const sayHi = () => console.log("Hi!");
+
+const runTwice = (fn) => {
+  fn();
+  fn();
+};
+
+console.log(runTwice(sayHi));
