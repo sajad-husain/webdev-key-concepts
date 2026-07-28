@@ -130,3 +130,13 @@ const runTwice = (fn) => {
 };
 
 console.log(runTwice(sayHi));
+
+// map filter and foreach
+const numbers = [1, 2, 3, 4, 5];
+
+numbers.forEach((num) => console.log(num * 2));
+
+numbers.map((num) => console.log(num * num));
+
+const evens = numbers.filter((num) => num % 2 == 0);
+console.log(evens);
