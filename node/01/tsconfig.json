@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    /* Target and Module */
+    "target": "ES2022",                          /* Output JavaScript version */
+    "module": "NodeNext",                        /* Specifies module code generation */
+    "moduleResolution": "NodeNext",              /* How modules get resolved */
+    
+    /* Emit */
+    "outDir": "./dist",                          /* Redirect output structure to the directory */
+    "rootDir": "./src",                          /* Specify the root folder of source files */
+    "sourceMap": true,                           /* Create source map files for debugging */
+    "removeComments": true,                      /* Do not emit comments to JavaScript */
+
+    /* Type Checking Rules */
+    "strict": true,                              /* Enable all strict type-checking options */
+    "noImplicitAny": true,                       /* Raise error on expressions with an implied 'any' type */
+    "strictNullChecks": true,                    /* Enable strict null checks */
+    
+    /* Interop Constraints */
+    "esModuleInterop": true,                     /* Emits additional JavaScript to ease importing CommonJS modules */
+    "forceConsistentCasingInFileNames": true,    /* Disallow inconsistently-cased references to the same file */
+    "skipLibCheck": true                         /* Skip type checking of declaration files (*.d.ts) */
+  },
+  "include": [
+    "src/**/*"                                   /* Track and compile all files inside the src folder */
+  ],
+  "exclude": [
+    "node_modules",                              /* Do not type check external dependencies */
+    "dist"                                       /* Ignore the build output folder */
+  ]
+}

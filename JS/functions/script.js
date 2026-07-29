@@ -140,3 +140,22 @@ numbers.map((num) => console.log(num * num));
 
 const evens = numbers.filter((num) => num % 2 == 0);
 console.log(evens);
+
+// temrature converter
+const farhenhiet = (celcius) => (celcius * 9) / 5 + 32;
+
+//
+function aboveAverage(numbers) {
+  const avg = numbers.reduce((sum, no) => sum + no, 0) / numbers.length;
+  const filAvg = numbers.filter((n) => n > avg);
+}
+
+// count calls in the function
+function countCall(fn) {
+  let callCount = 0;
+  return function (...args) {
+    callCount++;
+    console.log(`Function is called ${callCount} times`);
+    return fn(...args);
+  };
+}
