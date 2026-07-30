@@ -19,7 +19,8 @@
     /* Interop Constraints */
     "esModuleInterop": true,                     /* Emits additional JavaScript to ease importing CommonJS modules */
     "forceConsistentCasingInFileNames": true,    /* Disallow inconsistently-cased references to the same file */
-    "skipLibCheck": true                         /* Skip type checking of declaration files (*.d.ts) */
+    "skipLibCheck": true,                         /* Skip type checking of declaration files (*.d.ts) */
+    "types": ["node"]
   },
   "include": [
     "src/**/*"                                   /* Track and compile all files inside the src folder */
