@@ -8,7 +8,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsx watch src/index.ts"
+    "dev": "tsx watch src/index.ts",
+    "01": "tsx watch src/01-process-object.ts",
+    "02": "tsx src/01-process-object.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
