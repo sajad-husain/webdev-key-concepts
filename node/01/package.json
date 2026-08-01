@@ -10,7 +10,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/index.ts",
     "01": "tsx watch src/01-process-object.ts",
-    "02": "npx tsx watch src/02-crypto.ts"
+    "02": "npx tsx watch src/02-crypto.ts",
+    "03": "npx tsx watch src/03-os-module.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
