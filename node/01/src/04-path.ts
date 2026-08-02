@@ -1,7 +1,8 @@
 import path from "node:path"
 import process from "node:process"
 
-
+// path module builds and reads file path
+// we use path.join method bacause it adds suitable seperators according to os.
 
 
 
@@ -10,6 +11,10 @@ import process from "node:process"
 const userUploads = process.cwd()
 const userId = "43"
 const profilePhoto = "profile.photo.png"
+
+// path.join()
+// create a path string, never create a folder
+// don't check whether files exist or not
 
 const originalFilePath = path.join(userUploads, "users", userId, profilePhoto)
 console.log("Original Path",originalFilePath)
