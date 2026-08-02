@@ -6,8 +6,8 @@
 function runSetTimoutExample(): void{
     console.log("1. Running Example")
     setTimeout(() =>{
-        console.log("2. Runnsing set time out with 1sec delay")
-    })
+        console.log("2. Runnsing set time out with 2sec delay")
+    }, 2000)
     console.log("3. This will run immediately node don't wait.");
     
 }
@@ -40,11 +40,20 @@ function runSetImmediate(): void{
     console.log("8. Sync code after setImmediate")
 }
 
+import { setTimeout as sleep } from "node:timers/promises";
+
+async function runPromiseTimer(): Promise<void> {
+  console.log("9. Starting promised based timer")
+    await sleep(1500)
+    console.log("10. Promise based timer finished after 1.5sec")
+} 
+
  async function testTimout() {
     runSetTimoutExample()
     runClearTimeout()
     runSetInterval()
     runSetImmediate()
+    runPromiseTimer()
 }
 
 testTimout()
