@@ -12,7 +12,8 @@
     "01": "tsx watch src/01-process-object.ts",
     "02": "npx tsx watch src/02-crypto.ts",
     "03": "npx tsx watch src/03-os-module.ts",
-    "04": "npx tsx watch src/04-path.ts"
+    "04": "npx tsx watch src/04-path.ts",
+    "05": "npx tsx watch src/05-timer-module.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
