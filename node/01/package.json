@@ -13,7 +13,8 @@
     "02": "npx tsx watch src/02-crypto.ts",
     "03": "npx tsx watch src/03-os-module.ts",
     "04": "npx tsx watch src/04-path.ts",
-    "05": "npx tsx watch src/05-timer-module.ts"
+    "05": "npx tsx watch src/05-timer-module.ts",
+    "06": "npx tsx watch src/06-callbak-asyncAwait-promises.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
