@@ -1,18 +1,21 @@
 {
   "expo": {
-    "name": "_expo-scaffold",
-    "slug": "_expo-scaffold",
+    "name": "Life's a game",
+    "slug": "lifes-a-game",
+    "description": "A small Expo (React Native) companion app that tracks life's daily wins, losses, and everything in between.",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "exposcaffold",
+    "scheme": "lifes-a-game",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "bundleIdentifier": "com.sajadhussain.lifesagame",
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.sajadhussain.lifesagame",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#5B21B6",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -28,7 +31,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#5B21B6",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
