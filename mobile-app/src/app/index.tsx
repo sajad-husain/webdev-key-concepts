@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -54,7 +55,7 @@ export default function HomeScreen() {
           ))}
         </ThemedView>
 
-        <Button title="Start scoring" style={styles.cta} />
+        <Button title="Start scoring" style={styles.cta} onPress={() => router.navigate('/settings')} />
 
         {Platform.OS === 'web' && <ThemedText type="small">also runs in the browser</ThemedText>}
       </SafeAreaView>
