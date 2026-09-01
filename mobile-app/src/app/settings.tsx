@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,10 +8,29 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { getItem, setItem } from '@/services/storage';
+
+const SCORE_KEY = 'score';
 
 export default function SettingsScreen() {
   const theme = useTheme();
   const [count, setCount] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    getItem<number>(SCORE_KEY, 0).then((value) => {
+      setCount(value);
+      setHydrated(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) {
+      setItem(SCORE_KEY, count);
+    }
+  }, [count, hydrated]);
+
+  const adjust = (next: number) => setCount(Math.max(0, next));
 
   return (
     <ThemedView style={styles.container}>
@@ -32,10 +51,14 @@ export default function SettingsScreen() {
           </ThemedText>
 
           <ThemedView style={styles.actions}>
-            <Button title="– 1" variant="ghost" onPress={() => setCount((value) => value - 1)} />
-            <Button title="+ 1" onPress={() => setCount((value) => value + 1)} />
-            <Button title="Reset" variant="secondary" onPress={() => setCount(0)} />
+            <Button title="– 1" variant="ghost" onPress={() => adjust(count - 1)} />
+            <Button title="+ 1" onPress={() => adjust(count + 1)} />
+            <Button title="Reset" variant="secondary" onPress={() => adjust(0)} />
           </ThemedView>
+
+          <ThemedText type="small" themeColor="textSecondary" style={styles.savedHint}>
+            your score is saved on this device
+          </ThemedText>
         </Card>
       </SafeAreaView>
     </ThemedView>
@@ -83,5 +106,8 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     flexWrap: 'wrap',
     justifyContent: 'center',
+  },
+  savedHint: {
+    marginTop: Spacing.two,
   },
 });
