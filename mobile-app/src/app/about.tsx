@@ -3,6 +3,7 @@ import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ExternalLink } from '@/components/external-link';
+import { NetworkExample } from '@/components/network-example';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Collapsible } from '@/components/ui/collapsible';
@@ -90,6 +91,14 @@ export default function AboutScreen() {
               <ThemedText type="smallBold">w</ThemedText> in the terminal to spin up the web build.
             </ThemedText>
           </Collapsible>
+        </ThemedView>
+
+        <ThemedView style={styles.sectionsWrapper}>
+          <ThemedText type="smallBold">Live example</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            The card below pulls real posts through the app&apos;s small API client.
+          </ThemedText>
+          <NetworkExample />
         </ThemedView>
       </ThemedView>
     </ScrollView>
