@@ -1,22 +1,28 @@
 # Life's a game
 
-A small Expo (React Native) + TypeScript app — a companion project to the
-`webdev-key-concepts` backend course. It demos the core Expo/React Native stack:
+A small Expo (React Native) + TypeScript app that treats everyday life like a
+scoreboard — keep the score, keep the list, keep going. Built as a companion
+project to the `webdev-key-concepts` full-stack backend course.
 
-- file-based routing (Expo Router)
-- themed shared UI components
-- local persistence with AsyncStorage
-- fetching from a public API
+## What it does
+
+- **Home** — a quick tour of the app with one tap to start scoring.
+- **Score** — a daily counter you can bump up and down; the value survives
+  restarts (AsyncStorage).
+- **List** — add and remove items, persisted on-device.
+- **About** — a live example that pulls real posts through the app's own API
+  client.
 
 ## Tech stack
 
-| Area        | Choice                              |
-| ----------- | ----------------------------------- |
-| Framework   | Expo (React Native)                 |
-| Language    | TypeScript                          |
-| Navigation  | Expo Router (file-based)            |
-| Persistence | `@react-native-async-storage/async-storage` |
-| API         | built-in `fetch`, small api client module |
+| Area        | Choice                                             |
+| ----------- | -------------------------------------------------- |
+| Framework   | Expo (React Native) — SDK 57                       |
+| Language    | TypeScript (strict)                                |
+| Navigation  | Expo Router (file-based) + native tabs             |
+| Persistence | `@react-native-async-storage/async-storage`        |
+| API         | built-in `fetch` via a small typed API client      |
+| Testing     | Jest + jest-expo                                   |
 
 ## Getting started
 
@@ -37,33 +43,53 @@ Then:
 ## Scripts
 
 ```bash
-npm start        # start the Expo dev server
-npm run android  # open on an Android emulator/device
-npm run ios      # open on an iOS simulator
-npm run web      # open in the browser
-npm run lint     # lint the project
-npm run typecheck  # run the TypeScript compiler (add via tsc --noEmit)
+npm start           # start the Expo dev server
+npm run android     # open on an Android emulator/device
+npm run ios         # open on an iOS simulator
+npm run web         # open in the browser
+npm run lint        # lint the project (expo lint)
+npm run typecheck   # TypeScript compiler check (tsc --noEmit)
+npm test            # run the Jest test suite
 ```
 
 ## Project structure
 
 ```
 mobile-app/
-├── app/         # routes/screens (Expo Router file-based routing)
-├── components/  # shared, themed UI components
-├── constants/   # theme tokens (colors, spacing, type scale)
-├── services/    # api client + storage helpers
-├── app.json     # Expo app config (name, slug, icons)
-└── tsconfig.json
+├── app.json            # Expo config (name, slug, icons, splash)
+├── src/
+│   ├── app/            # routes/screens (Expo Router file-based routing)
+│   │   ├── _layout.tsx # root layout + status bar
+│   │   ├── index.tsx   # Home tab
+│   │   ├── settings.tsx# Score tab (persisted counter)
+│   │   ├── list.tsx    # List tab (add/remove items)
+│   │   └── about.tsx   # About tab (live API example)
+│   ├── components/     # themed UI: Button, Card, Input + screen helpers
+│   ├── constants/      # theme tokens (Colors, Spacing, Radius, Fonts)
+│   ├── hooks/          # color scheme + theme hooks
+│   ├── services/       # storage + api client
+│   ├── types/          # ambient type declarations (CSS modules)
+│   └── global.css      # web font variables
+└── __tests__/          # Jest unit tests (storage, api)
 ```
 
-## Roadmap
+## Testing
+
+```bash
+npm test
+```
+
+Covers the two service modules: the AsyncStorage wrapper (fallback, read/write,
+remove) and the API client (parsing and error handling). See
+[`docs/architecture.md`](docs/architecture.md) for how the pieces fit together.
+
+## Roadmap (2026)
 
 - [x] Expo scaffold + app config (`Life's a game`, `lifes-a-game`)
 - [x] Theme tokens & shared UI components
 - [x] Navigation + home screen
-- [ ] Counter/settings screen
-- [ ] AsyncStorage persistence
-- [ ] List screen with add/remove
-- [ ] API client + example fetch
-- [ ] Polish: layout, status bar, tests
+- [x] Counter/settings screen
+- [x] AsyncStorage persistence
+- [x] List screen with add/remove
+- [x] API client + example fetch
+- [x] Polish: layout, status bar, tests
