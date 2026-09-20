@@ -1,3 +1,8 @@
+// ============================================================
+// Path module — join, dirname, basename, extname, resolve
+// Started: 2026-08-02   Finished: 2026-08-02
+// ============================================================
+
 import path from "node:path"
 import process from "node:process"
 

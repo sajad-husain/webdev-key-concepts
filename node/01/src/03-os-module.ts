@@ -1,3 +1,8 @@
+// ============================================================
+// OS module — platform, arch, cpus, memory, home/temp dirs
+// Started: 2026-08-02   Finished: 2026-08-02
+// ============================================================
+
 import * as os from "node:os"
 
 // os

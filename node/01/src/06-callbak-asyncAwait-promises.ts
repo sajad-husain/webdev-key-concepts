@@ -1,3 +1,8 @@
+// ============================================================
+// Async fundamentals — callbacks, promises, async/await
+// Started: 2026-08-15   Finished: 2026-09-20
+// ============================================================
+
 type User = {id: number,  name: string, role: "user" | "admin"}
 
 const users: User[] = [

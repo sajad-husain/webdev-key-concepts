@@ -1,4 +1,9 @@
 
+// ============================================================
+// Process object — env vars, argv, exit codes, lifecycle events
+// Started: 2026-07-30   Finished: 2026-07-31
+// ============================================================
+
 // env variable
 // command line arguments
 // exit code 

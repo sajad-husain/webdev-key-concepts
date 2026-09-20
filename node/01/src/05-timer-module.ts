@@ -1,5 +1,10 @@
 
 
+// ============================================================
+// Timers module — setTimeout, setInterval, setImmediate + promise timers
+// Started: 2026-08-02   Finished: 2026-08-02
+// ============================================================
+
 // while running something if we need a delay 
 // if we want repeatedly running something with fixed time interval
 
