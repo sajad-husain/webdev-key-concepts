@@ -81,3 +81,25 @@ getUserPromisified(2)
     .then((user) => console.log("promisify ->", user))
     .catch((err) => console.error("promisify ->", err.message));
 
+// ============================================================
+// async/await — reads like sync code, never blocks the event loop
+// ============================================================
+
+async function main(): Promise<void> {
+    try {
+        const user = await getUserPromise(1);
+        console.log("async/await -> user:", user);
+
+        // parallel work: await the whole Promise.all batch once
+        const [a, b] = await Promise.all([getUserPromise(2), getUserPromise(3)]);
+        console.log("async/await -> parallel:", [a, b]);
+
+        // any rejection anywhere jumps straight to catch
+        await getUserPromise(-1);
+    } catch (err) {
+        console.error("async/await -> failed:", (err as Error).message);
+    }
+}
+
+main();
+

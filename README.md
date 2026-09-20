@@ -266,7 +266,7 @@ Promise.all([getUser(1), getUser(2)]).then(([a, b]) => console.log(a, b));
 // Promise.race([getUser(1), timeout(200)])  -> first to settle wins
 ```
 
-### 1.10 async/await (2:00:02) 🔄 In progress
+### 1.10 async/await (2:00:02) ✅
 
 Subtopics: `await` inside `async function`, `try/catch`, keep a `main()` wrapper in CommonJS,
 `await Promise.all([...])` for parallel work. This is the style used for the rest of the course.
@@ -1585,7 +1585,7 @@ app.post("/auth/google", async (req, res) => {
 - [x] Path module
 - [x] Timers module
 - [x] Callbacks
-- [ ] Promises and async/await
+- [x] Promises and async/await
 - [ ] File system: Synchronous APIs
 - [ ] File system: Callback APIs
 - [ ] File system: Promise APIs
