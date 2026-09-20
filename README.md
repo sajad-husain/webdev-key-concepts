@@ -17,7 +17,18 @@ have it reviewed before moving on.
   from `node/01/`.
 - Checkboxes in each section track progress.
 
----
+## Mobile App
+
+A handheld companion project built with **Expo (React Native) + TypeScript** lives in
+[`mobile-app/`](./mobile-app/README.md) — **"Life's a game"**, a small demo app learning the
+Expo/React Native stack: file-based routing, themed UI components, local persistence
+(AsyncStorage), and fetching from a public API.
+
+```bash
+cd mobile-app
+npm install
+npx expo start        # then scan the QR code with Expo Go
+```
 
 ## Course at a glance
 
