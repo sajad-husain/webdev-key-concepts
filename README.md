@@ -1623,7 +1623,3 @@ app.post("/auth/google", async (req, res) => {
 ---
 
 *Keep a commit per completed topic so progress is easy to track in `git log`.*
-
-
-
-
