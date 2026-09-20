@@ -210,7 +210,7 @@ async function main() {
 main();
 ```
 
-### 1.8 Callbacks (1:49:14) 🔄 In progress
+### 1.8 Callbacks (1:49:14) ✅
 
 Subtopics: function passed to another to run after async work; **error-first** convention
 `cb(err, result)`; callback hell (nested pyramids). Legacy — don't write new ones.
@@ -1584,7 +1584,7 @@ app.post("/auth/google", async (req, res) => {
 - [x] OS module
 - [x] Path module
 - [x] Timers module
-- [ ] Callbacks
+- [x] Callbacks
 - [ ] Promises and async/await
 - [ ] File system: Synchronous APIs
 - [ ] File system: Callback APIs
