@@ -41,3 +41,43 @@ getUserById(1, (e1, first) => {
     });
 });
 
+// ============================================================
+// promises — pending -> fulfilled | rejected (escaping the pyramid)
+// ============================================================
+
+function getUserPromise(id: number): Promise<User> {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            if (id <= 0) return reject(new Error(`invalid id: ${id}`));
+            const user = users.find((u) => u.id === id);
+            if (!user) return reject(new Error(`user not found: ${id}`));
+            resolve(user);
+        }, 300);
+    });
+}
+
+getUserPromise(1)
+    .then((user) => console.log("promise ->", user))
+    .catch((err) => console.error("promise ->", err.message))
+    .finally(() => console.log("promise -> settled"));
+
+// run independent calls in parallel and wait for all of them
+Promise.all([getUserPromise(1), getUserPromise(2)])
+    .then(([a, b]) => console.log("Promise.all ->", a.name, "+", b.name));
+
+// first one to settle wins — handy as a timeout guard
+const timeout = (ms: number): Promise<never> =>
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`timed out after ${ms}ms`)), ms));
+
+Promise.race([getUserPromise(3), timeout(1000)])
+    .then((user) => console.log("Promise.race ->", user))
+    .catch((err) => console.error("Promise.race ->", err.message));
+
+// util.promisify turns an error-first callback function into a promise one
+import { promisify } from "node:util";
+
+const getUserPromisified = promisify(getUserById) as (id: number) => Promise<User>;
+getUserPromisified(2)
+    .then((user) => console.log("promisify ->", user))
+    .catch((err) => console.error("promisify ->", err.message));
+

@@ -241,7 +241,7 @@ getUser(1, (e1, u) => {
 });
 ```
 
-### 1.9 Promises (2:00:02) 🔄 In progress
+### 1.9 Promises (2:00:02) ✅
 
 Subtopics: states `pending -> fulfilled | rejected`, `new Promise`, `.then/.catch/.finally`,
 `Promise.all`, `Promise.race`, `util.promisify`.
