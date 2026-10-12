@@ -2,15 +2,16 @@ import * as Sharing from 'expo-sharing';
 import { captureRef } from 'react-native-view-shot';
 import { View } from 'react-native';
 import { SM2_MIN_EASE, SM2_INITIAL_EASE } from '@/services/gamification';
-import { GameState } from '@/services/state';
+import { GameState, createInitialState } from '@/services/state';
 
-export async function shareStatsAsText(state: GameState, deckId?: string): Promise<void> {
-  const deckLogs = deckId
-    ? state.reviewLogs.filter((l) => l.deckId === deckId)
-    : state.reviewLogs;
+export async function shareStatsAsText(state?: GameState, deckId?: string): Promise<void> {
+  const gameState = state || createInitialState();
+const deckLogs = deckId
+    ? gameState.reviewLogs.filter((l: { deckId: string; xpEarned: number }) => l.deckId === deckId)
+    : gameState.reviewLogs;
   const deckCards = deckId
-    ? state.cards.filter((c) => c.deckId === deckId)
-    : state.cards;
+    ? gameState.cards.filter((c: { deckId: string; front: string; back: string }) => c.deckId === deckId)
+    : gameState.cards;
 
   const totalReviews = deckLogs.length;
   const totalXp = deckLogs.reduce((sum, log) => sum + log.xpEarned, 0);
@@ -72,16 +73,16 @@ Generated on ${new Date().toLocaleDateString()}
 }
 
 export async function shareStatsAsImage(
-  viewRef: React.RefObject<View | null>,
+  viewRef?: React.RefObject<View | null>,
   options?: { filename?: string; format?: 'png' | 'jpg'; quality?: number }
 ): Promise<void> {
-  if (!viewRef.current) {
+  const ref = viewRef?.current;
+  if (!ref) {
     console.warn('View ref not available for capture');
     return;
   }
-
   try {
-    const style = viewRef.current.props.style;
+    const style = ref.props.style;
     let width = 400;
     let height = 600;
     if (style && typeof style === 'object' && !Array.isArray(style)) {

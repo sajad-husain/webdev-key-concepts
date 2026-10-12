@@ -1,4 +1,4 @@
-import * as Haptics from 'expo-haptics';
+import * as ExpoHaptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
 /** Light haptic feedback on row toggles and button taps. No-op on web. */
@@ -6,22 +6,22 @@ export function tap(): void {
   if (Platform.OS === 'web') {
     return;
   }
-  void Haptics.selectionAsync();
+  void ExpoHaptics.selectionAsync();
 }
 
 /** Impact feedback for more meaningful actions. No-op on web. */
 export function impact(
-  style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Light,
+  style: ExpoHaptics.ImpactFeedbackStyle = ExpoHaptics.ImpactFeedbackStyle.Light,
 ): void {
   if (Platform.OS === 'web') {
     return;
   }
-  void Haptics.impactAsync(style);
+  void ExpoHaptics.impactAsync(style);
 }
 
 /** Heavy impact for level-up celebrations. No-op on web. */
 export function heavyImpact(): void {
-  impact(Haptics.ImpactFeedbackStyle.Heavy);
+  impact(ExpoHaptics.ImpactFeedbackStyle.Heavy);
 }
 
 /** Celebration haptic for streak milestones. No-op on web. */
@@ -29,5 +29,13 @@ export function celebration(): void {
   if (Platform.OS === 'web') {
     return;
   }
-  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  void ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Success);
 }
+
+/** Haptics namespace for test compatibility. */
+export const Haptics = {
+  tap,
+  impact,
+  heavyImpact,
+  celebration,
+};

@@ -203,7 +203,7 @@ function calculateSimilarity(a: string, b: string): number {
  * Higher values = stricter matching (fewer false positives).
  * Default: 0.85
  */
-export const DUPLICATE_FUZZY_THRESHOLD = 0.85;
+export let DUPLICATE_FUZZY_THRESHOLD = 0.85;
 
 /** Set the fuzzy duplicate detection threshold. */
 export function setFuzzyThreshold(threshold: number): void {

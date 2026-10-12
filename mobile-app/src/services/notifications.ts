@@ -16,7 +16,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-function supported(): boolean {
+export function notificationsSupported(): boolean {
   return Platform.OS !== 'web';
 }
 
@@ -35,23 +35,23 @@ async function ensureChannel(): Promise<void> {
 
 export type PermissionStatus = {
   granted: boolean;
-  status: NotificationPermissionsStatus;
-  details?: { ios?: NotificationIosPermissionStatus };
+  status: 'granted' | 'denied' | 'undetermined';
+  details?: Record<string, unknown>;
 };
 
 export function getPermissionStatus(
-  settings: NotificationPermissions,
+  settings: { granted: boolean; status: 'granted' | 'denied' | 'undetermined'; ios?: unknown },
 ): PermissionStatus {
   const granted = settings.granted;
   let details: PermissionStatus['details'];
-  if (Platform.OS === 'ios') {
-    details = { ios: settings.ios?.status };
+  if (Platform.OS === 'ios' && settings.ios) {
+    details = { ios: String((settings.ios as any).status) };
   }
   return { granted, status: settings.status, details };
 }
 
 export async function ensurePermissions(): Promise<PermissionStatus> {
-  if (!supported()) {
+  if (!notificationsSupported()) {
     return { granted: false, status: 'denied' };
   }
   const settings = await Notifications.getPermissionsAsync();
@@ -71,7 +71,7 @@ export async function ensurePermissions(): Promise<PermissionStatus> {
  * in-app overlay can be verified without waiting for the set time.
  */
 export async function scheduleTestAlarm(): Promise<void> {
-  if (!supported()) {
+  if (!notificationsSupported()) {
     return;
   }
   await ensureChannel();
@@ -104,7 +104,7 @@ export async function rescheduleDaily(
   routines: Routine[],
   enabled: boolean,
 ): Promise<boolean> {
-  if (!supported()) {
+  if (!notificationsSupported()) {
     return false;
   }
   await ensureChannel();
@@ -148,7 +148,7 @@ export async function scheduleReviewReminder(
   hour = 20,
   minute = 0,
 ): Promise<void> {
-  if (!supported()) {
+  if (!notificationsSupported()) {
     return;
   }
   await ensureChannel();
@@ -179,7 +179,7 @@ export async function scheduleReviewReminder(
 }
 
 export async function cancelReviewReminder(): Promise<void> {
-  if (!supported()) {
+  if (!notificationsSupported()) {
     return;
   }
   await Notifications.cancelScheduledNotificationAsync(REVIEW_REMINDER_ID);
